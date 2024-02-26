@@ -1,38 +1,43 @@
-
 const mongoose = require('mongoose');
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const athleteSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: [true, 'Name is required']
-    },
-    phone: {
-        type: String,
-        required: [true, 'Phone number is required']
-    },
-    dob: {
-        type: Date, // Consider using Date type for date fields
-        required: [true, 'Date of birth is required']
-    },
-    address: {
-        type: String,
-        required: [true, 'Address is required']
-    },
-    domains: {
-        type: [String],
-        // required: [true, 'At least one domain is required']
-    },
-    // detail_experience: {
-    //     type: String,
-    //     required: [true, 'Detail experience is required']
-    // },
-    // user_type: {
-    //     type: String,
-    //     enum: ['athlete', 'coach'],
-    //     required: [true, 'User type is required']
-    // },
-
-    }, {
-    timestamps: true // Add timestamps option
+  email:{ type: String, required: true, unique: true },
+  phone: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  name: { type: String, required: true },
+  dob: { type: String, },
+  address: { type: String },
+  alternative_contact: { type: String },
+  health_height_desc: { type: String },
+  created_at: { type: Date, default: Date.now },
+  updated_at: { type: Date, default: Date.now },
+  user_type: {
+            type: String,
+            enum: ['athlete', 'coach'],
+            default: 'athlete', // Setting a default value
+        },
+  loggedIn: { 
+    type: Boolean, default: false 
+  },
 });
-module.exports = mongoose.model('Athlete', athleteSchema);
+
+athleteSchema.pre("save", async function (next) {
+      if (this.isModified("password")) {
+          this.password = await bcrypt.hash(this.password, 10);
+      }
+      next();
+  });
+  
+  athleteSchema.methods.matchPassword = async function (password) {
+      return await bcrypt.compare(password, this.password);
+  };
+  
+  athleteSchema.methods.generateToken = function () {
+      return jwt.sign({ _id: this._id }, process.env.JWT_SECRET);
+  };
+  
+const Athlete = mongoose.model('Athlete', athleteSchema);
+
+module.exports = Athlete;

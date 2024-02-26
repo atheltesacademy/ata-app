@@ -1,9 +1,13 @@
+const express = require('express');
+const router = express.Router();
+const athlete = require('../controllers/athlete');
+const authenticate = require('../middlewares/auth');
 
-const express=require("express");
-const{ details } = require("../controllers/athlete");
 
+router.post("/detailSignup",athlete.details);
+router.post('/signup', athlete.register);
+router.post('/login', athlete.login);
+router.post('/logout', athlete.logout);
+router.patch('/updatePassword', authenticate, athlete.updatePassword);
 
-const router =express.Router();
-router.route("/details").post(details);
-
-module.exports= router;
+module.exports = router;

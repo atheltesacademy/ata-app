@@ -9,6 +9,11 @@ const reviewSchema = new mongoose.Schema({
          ref: 'Coach', 
          required: true 
         },
+    athlete_id: {
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: 'athlete', 
+            required: true 
+           },
     rating: { 
         type: Number, 
         required: true 

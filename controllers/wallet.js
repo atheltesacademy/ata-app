@@ -1,4 +1,3 @@
-// controllers/wallet.js
 const Wallet = require('../models/wallet');
 
 // Get wallet amount
