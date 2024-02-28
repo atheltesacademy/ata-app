@@ -3,6 +3,12 @@ const Sport = require('../models/sport');
 // Create a new sport
 exports.createSport = async (req, res) => {
     try {
+        const {sport_name} = req.body;
+        const existingSport = await Sport.findOne({sport_name});
+        if (existingSport){
+            throw new Error('this sport already exists.');
+        }
+        
         const sport = await Sport.create(req.body);
         res.status(201).json({ success: true, sport });
     } catch (error) {

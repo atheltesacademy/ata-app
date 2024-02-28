@@ -1,7 +1,6 @@
 const Coach = require('../models/coach');
 const Coacheslist = require('../models/coacheslist'); // Assuming you have a model for storing coach details list
 
-
 exports.detailsCoach = async (req, res) => {
     try {
         const { coach_id, name, phone, dob, address, languages, charges, currency, available, sports } = req.body;
@@ -58,7 +57,7 @@ exports.detailsCoachlist = async (req, res) => {
         const { coach_id, coach_name, coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name } = req.body;
         
         // Retrieve session data for authentication
-        const {  user_type } = req.session;
+        const { email, user_type } = req.session;
 
         // Ensure that only coaches or athletes can access coach details list page
         if (user_type !== 'coach' && user_type !== 'athlete') {
@@ -80,7 +79,7 @@ exports.detailsCoachlist = async (req, res) => {
 
 exports.getAllCoacheslist = async (req, res) => {
     try {
-        const coaches = await Coacheslist.find();
+        const coaches = await Coach.find();
         res.status(200).json({ success: true, coaches });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });

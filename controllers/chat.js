@@ -10,7 +10,6 @@ exports.createChat = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
 // Get all history chats for coaches
 exports.getCoachChats = async (req, res) => {
     try {

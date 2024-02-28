@@ -3,24 +3,17 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const sessionSchema = new mongoose.Schema({
-    name: {
-         type: String,
-         required: true 
-        },
-    email:{ 
+    
+ email:{ 
         type: String,
          required: true,
           unique: true
-     },
-  phone: {
-     type: String,
-      required: true, 
-      unique: true
      },
   password: {
      type: String,
       required: true
      },
+
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Athlete', // Reference to the Athlete collection

@@ -7,9 +7,9 @@ const generateToken = (userId) => {
     return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Adjust expiry time as needed
 };
 
-exports.register = async (req, res) => {
+exports.signup = async (req, res) => {
     try {
-        const { name, email, password, confirmPassword, phone, user_type } = req.body;
+        const { email, password, confirmPassword,  user_type } = req.body;
 
         // Check if password and confirmPassword match
         if (password !== confirmPassword) {
@@ -25,7 +25,7 @@ exports.register = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create a new session with the hashed password
-        const newSession = await Session.create({ name, email, password: hashedPassword, phone, user_type });
+        const newSession = await Session.create({ email, password: hashedPassword,user_type });
 
         // Generate JWT token
         const token = generateToken(newSession._id);
