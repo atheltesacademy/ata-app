@@ -1,73 +1,104 @@
-const Athlete = require('../models/athlete');
 const Session = require('../models/session');
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
+// Function to generate JWT token
+const generateToken = (userId) => {
+    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Adjust expiry time as needed
+};
 
-exports.createSession = async (req, res) => {
+exports.register = async (req, res) => {
     try {
-        const { user_id, user_type, access_token } = req.body;
-        
-        // Assuming you want to find the athlete based on some criteria like email
-        const athlete = await Athlete.findOne({ email: req.body.email });
+        const { name, email, password, confirmPassword, phone, user_type } = req.body;
 
-        if (!athlete) {
-            return res.status(404).json({ error: 'Athlete not found' });
+        // Check if password and confirmPassword match
+        if (password !== confirmPassword) {
+            throw new Error("Passwords do not match");
+        }
+        // Check if a session with the same email already exists
+        const existingSession = await Session.findOne({ email });
+        if (existingSession) {
+            throw new Error("Email already exists");
         }
 
-        const newSession = await Session.create({ user_id, user_type, access_token });
+        // Hash password using bcrypt
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        res.status(201).json({ newSession, athlete });
+        // Create a new session with the hashed password
+        const newSession = await Session.create({ name, email, password: hashedPassword, phone, user_type });
+
+        // Generate JWT token
+        const token = generateToken(newSession._id);
+
+        // If user_type is athlete or coach, redirect to respective pages
+        if (user_type === 'athlete') {
+            // Redirect to athlete page
+            res.status(201).json({ message: "Registration successful", redirect: "/athlete", token });
+        } else if (user_type === 'coach') {
+            // Redirect to coach page
+            res.status(201).json({ message: "Registration successful", redirect: "/coach", token });
+        } 
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 };
 
-
-exports.getAllSessions = async (req, res) => {
+exports.login = async (req, res) => {
+    const { email, password } = req.body;
     try {
-        const sessions = await Session.find();
-        res.status(200).json(sessions);
+        const session = await Session.findOne({ email });
+        if (!session) throw new Error('Requested user does not exist.');
+
+        // Compare hashed password using bcrypt
+        const isPasswordMatch = await bcrypt.compare(password, session.password);
+        if (!isPasswordMatch) throw new Error('Invalid password');
+
+        // Generate JWT token
+        const token = generateToken(session._id);
+
+        // Assuming you want to set loggedIn to true in session
+        session.loggedIn = true;
+        await session.save();
+
+        res.status(200).json({ message: 'Login successful', token });
+    } catch (error) {
+        res.status(401).json({ error: error.message });
+    }
+};
+exports.logout = async (req, res) => {
+    try {
+        const { session } = req;
+        if (!session) throw new Error('Session not found');
+
+        // Set loggedIn to false
+        session.loggedIn = false;
+        await session.save();
+
+        res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
-exports.getSessionById = async (req, res) => {
+exports.updatePassword = async (req, res) => {
+    const { oldPassword, newPassword } = req.body;
     try {
-        const session = await Session.findById(req.params.id);
-        if (!session) {
-            return res.status(404).json({ error: 'Session not found' });
-        }
-        res.status(200).json(session);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
+        const { session } = req;
+        if (!session) throw new Error('Session not found');
 
-exports.updateSession = async (req, res) => {
-    try {
-        const updatedSession = await Session.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        res.status(200).json(updatedSession);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
+        // Compare old password
+        const isPasswordMatch = await bcrypt.compare(oldPassword, session.password);
+        if (!isPasswordMatch) throw new Error('Old password is incorrect');
 
-exports.deleteSession = async (req, res) => {
-    try {
-        await Session.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: 'Session deleted successfully' });
+        // Hash new password
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update password field
+        session.password = hashedNewPassword;
+        await session.save();
+
+        res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ error: error.message });
     }
 };
-// Athlete.findOne({ title: 'athlete' })
-//     .populate('athlete_id') // Assuming 'athlete_id' is the field referencing the Athlete collection
-//     .exec() 
-//     .then(athlete => {
-//         console.log('Athlete:', athlete);
-//         // Handle the athlete object here
-//     })
-//     .catch(error => {
-//         console.error(error);
-//         // Handle errors here
-//     });

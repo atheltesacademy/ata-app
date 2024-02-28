@@ -29,27 +29,26 @@ const coachSchema = new mongoose.Schema({
         type: [String],
         required: true
       },
-    rating: {
-        type: Number,
-        required: true
+    coach_rating: {
+        type: Number, 
     },
-    languages: {
+    coach_languages: {
         type: [String],
         required: true
     },
-    charges: {
+    coach_charges: {
         type: Number,
         required: true
     },
-    currency: {
+    coach_currency: {
         type: String,
         required: true
     },
-    available: {
+    coach_available: {
         type: Boolean,
         required: true
     },
-    sports: {
+    sport_name: {
         type: [String],
         required: true
     }

@@ -23,6 +23,7 @@ exports.addMoney = async (req, res) => {
             { $inc: { amount: amount } },
             { new: true }
         );
+
         if (!wallet) {
             return res.status(404).json({ success: false, message: 'Wallet not found' });
         }

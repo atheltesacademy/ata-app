@@ -1,9 +1,9 @@
-const Coacheslist = require('../models/coacheslist'); // Assuming the model name is 'Coach'
+const Coacheslist = require('../models/coacheslist'); 
 
 exports.detailsCoachlist = async (req, res) => {
     try {
         const { coach_id,coach_name, coach_rating, coach_languages,coach_charges,coach_currency,coach_available,sport_name, user_type } = req.body;
-        const newCoach = await Coacheslist.create({coach_id, coach_name, coach_rating,   coach_languages,coach_charges,coach_currency,coach_available,sport_name, user_type });
+        const newCoach = await Coacheslist.create({coach_id, coach_name, coach_rating,coach_languages,coach_charges,coach_currency,coach_available,sport_name, user_type });
         res.status(201).json({
             message: "Coach details list is here",
             coach_id: newCoach._id.toString(),
