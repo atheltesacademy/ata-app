@@ -1,66 +1,77 @@
 const Athlete = require('../models/athlete');
-const Session = require('../models/session'); // Assuming you have a Session model for authentication
+const Session = require('../models/session');
 
-exports.details = async (req, res) => {
+// Controller function to create a new athlete
+exports.createAthlete = async (req, res) => {
   try {
     const { name, phone, dob, address, alternative_contact, health_height_desc } = req.body;
-
     // Retrieve session data for authentication
-    const { email, user_type } = req.session;
-
-    let athlete;
-
+    const { email, password } = req.session;
     // Find the athlete by email if the user is an athlete
-    if (user_type === 'athlete') {
-      athlete = await Athlete.findOne({ email });
-      if (!athlete) {
-        // Create a new athlete if not found
-        athlete = new Athlete();
-        athlete.email = email; // Set athlete email from session
-      }
-    } else {
-      throw new Error("Unauthorized access"); // Only athletes are allowed to update their details
+    const session = await Session.findOne({ email, password }); // Find session by email and password
+    if (!session) {
+      throw new Error("Invalid session"); // Unauthorized access
     }
 
-    // Update athlete details
-    athlete.name = name;
-    athlete.phone = phone;
-    athlete.dob = dob;
-    athlete.address = address;
-    athlete.alternative_contact = alternative_contact;
-    athlete.health_height_desc = health_height_desc;
+    // Fetch athlete's details
+    athlete = await Athlete.findOne({ email: session.email }, 'email'); // Only retrieve email
 
-    // Save the athlete
+    if (!athlete) {
+      throw new Error("Athlete not found");
+    }
+
+    // Create new athlete instance
+    const athlete = new Athlete({
+      phone,
+      name,
+      dob,
+      address,
+      alternative_contact,
+      health_height_desc
+    });
+
+    // Save the athlete to the database
     await athlete.save();
-    // Send response with athlete details
-    res.status(201).json({ message: "Athlete details updated successfully", athlete });
+
+    res.status(201).json({ message: "Athlete created successfully", athlete });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+      res.status(400).json({ error: error.message });
+    }
+  }
+};
+exports.detailAthlete = async (req, res) => {
+  try {
+    const { email, name, phone, dob, address, domains, detail_experience, user_type } = req.body;
+
+    // Create new athlete instance
+    const athlete = new Athlete({
+      email,
+      name,
+      phone,
+      dob,
+      address,
+      domains,
+      detail_experience,
+      user_type
+    });
+
+    // Save the athlete to the database
+    await athlete.save();
+
+    res.status(201).json({ message: "Athlete created successfully", athlete });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 };
 
-exports.updateAthleteId = async (req, res) => {
+// Controller function to get all athletes
+exports.getAllAthletes = async (req, res) => {
   try {
-    // Retrieve session data for authentication
-    const { email, user_type } = req.session;
+    // Retrieve all athletes from the database
+    const athletes = await Athlete.find();
 
-    // Validate user access
-    if (user_type !== 'coach') {
-      throw new Error("Unauthorized access"); // Only coaches are allowed to update athlete IDs
-    }
-
-    const { athlete_id } = req.body;
-
-    // Validate athlete_id
-    if (!mongoose.Types.ObjectId.isValid(athlete_id)) {
-      throw new Error('Invalid Athlete ID');
-    }
-    // Update the user document with the athlete_id
-    await Session.updateOne(
-      { email: email }, // Assuming email uniquely identifies the coach
-      { $push: { athlete: athlete_id } }
-    );
-    res.send('Athlete ID added successfully to the document');
+    res.status(200).json({ athletes });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

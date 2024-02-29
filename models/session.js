@@ -3,21 +3,14 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const sessionSchema = new mongoose.Schema({
-    
- email:{ 
+    email: {
         type: String,
-         required: true,
-          unique: true
-     },
-  password: {
-     type: String,
-      required: true
-     },
-
-    user_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Athlete', // Reference to the Athlete collection
-        // required: true
+        required: true,
+        unique: true
+    },
+    password: {
+        type: String,
+        required: true
     },
     user_type: {
         type: String,
@@ -26,7 +19,6 @@ const sessionSchema = new mongoose.Schema({
     },
     access_token: {
         type: String,
-        // required: true
     },
     created_at: {
         type: Date,
@@ -40,9 +32,9 @@ const sessionSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
-    loggedIn: { 
-        type: Boolean, default: false 
-      },
+    loggedIn: {
+        type: Boolean, default: false
+    },
 });
 
 sessionSchema.pre("save", async function (next) {
@@ -51,10 +43,15 @@ sessionSchema.pre("save", async function (next) {
     }
     next();
 });
-sessionSchema.methods.matchPassword = async function (password) {
-    return await bcrypt.compare(password, this.password);
+// Method to compare passwords
+sessionSchema.methods.comparePassword = async function (password) {
+    try {
+        return await bcrypt.compare(password, this.password);
+    }
+    catch (error) {
+        throw new Error(error.message);
+    }
 };
-
 sessionSchema.methods.generateToken = function () {
     return jwt.sign({ _id: this._id }, process.env.JWT_SECRET);
 };

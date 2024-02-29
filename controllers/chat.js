@@ -20,7 +20,6 @@ exports.getCoachChats = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
 // Get all history chats for an athlete
 exports.getAthleteChats = async (req, res) => {
     try {
@@ -42,7 +41,7 @@ exports.getAllChats = async (req, res) => {
     }
 };
 
-// // Get chat by ID
+// Get chat by ID
 exports.getChatById = async (req, res) => {
     try {
         const chat = await Chat.findById(req.params.id);
@@ -54,20 +53,6 @@ exports.getChatById = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
-// Update chat by ID
-exports.updateChatById = async (req, res) => {
-    try {
-        const chat = await Chat.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!chat) {
-            return res.status(404).json({ success: false, message: 'Chat not found' });
-        }
-        res.status(200).json({ success: true, chat });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
 // Delete chat by ID
 exports.deleteChatById = async (req, res) => {
     try {

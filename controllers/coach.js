@@ -1,82 +1,57 @@
 const Coach = require('../models/coach');
-const Coacheslist = require('../models/coacheslist'); // Assuming you have a model for storing coach details list
+const Session = require('../models/session');
 
 exports.detailsCoach = async (req, res) => {
     try {
-        const { coach_id, name, phone, dob, address, languages, charges, currency, available, sports } = req.body;
-
         // Retrieve session data for authentication
-        const { email, user_type } = req.session;
+        const { email, password } = req.session;
+        // Find the coach by email
+        const session = await Session.findOne({ email, password });
+        if (!session) {
+            throw new Error("Invalid session");
+        }
+        // Fetch coach's details by email
+        coach = await Coach.findOne({ email: session.email }, 'email'); // Only retrieve email
 
-        let coach;
-
-        // Ensure that only coaches can access coach details page
-        if (user_type !== 'coach') {
-            throw new Error("Unauthorized access"); // Only coaches are allowed to access coach details
+        if (!coach) {
+            throw new Error("coach not found");
         }
 
-        // Find the coach by ID
-        if (coach_id) {
-            coach = await Coach.findById(coach_id);
-            if (!coach) {
-                throw new Error("Coach not found");
-            }
-        } else {
-            // Create a new coach if coach_id is not provided
-            coach = new Coach();
-            coach.email = email; // Set coach email from session
-        }
-
-        // Update coach details
-        coach.name = name;
-        coach.phone = phone;
-        coach.dob = dob;
-        coach.address = address;
-        coach.languages = languages;
-        coach.charges = charges;
-        coach.currency = currency;
-        coach.available = available;
-        coach.sports = sports;
-
-        // Provide dummy values for password and email
-        coach.password = 'dummyPassword';
-        coach.email = 'dummy@example.com';
-
-        // Save the coach
-        await coach.save();
-
-        // Send response with coach details
-        res.status(201).json({ message: "Coach details updated successfully", coach });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+            res.status(400).json({ error: "Email already exists" });
+        } else {
+            res.status(400).json({ error: error.message });
+        }
     }
 };
-
 exports.detailsCoachlist = async (req, res) => {
     try {
-        const { coach_id, coach_name, coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name } = req.body;
-        
-        // Retrieve session data for authentication
-        const { email, user_type } = req.session;
-
-        // Ensure that only coaches or athletes can access coach details list page
-        if (user_type !== 'coach' && user_type !== 'athlete') {
-            throw new Error("Unauthorized access"); // Only coaches or athletes are allowed to access coach details list
-        }
+        const { coach_name, coach_phone, coach_dob, coach_address, email, coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name } = req.body;
 
         // Create new coach details list entry
-        const newCoach = await Coacheslist.create({ coach_id, coach_name, coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name, user_type });
+        const newCoach = await Coach.create({ coach_phone, coach_address, coach_dob, coach_name, email, coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name });
 
         res.status(201).json({
             message: "Coach details list is here",
             coach_id: newCoach._id.toString(),
-            user_type: newCoach.user_type
+            coach_phone,
+            coach_address,
+            coach_dob,
+            coach_name,
+            email,
+            coach_rating,
+            coach_languages,
+            coach_charges,
+            coach_currency,
+            coach_available,
+            sport_name
+
         });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
-
 exports.getAllCoacheslist = async (req, res) => {
     try {
         const coaches = await Coach.find();

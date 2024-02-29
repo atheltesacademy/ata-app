@@ -1,26 +1,28 @@
-const jwt = require('jsonwebtoken');
+// const jwt = require('jsonwebtoken');
+const Session = require('../models/session');
+const bcrypt = require('bcrypt');
 
-const authenticate = async (req, res, next) => {
+const auth = async (req, res, next) => {
   try {
-    // Extract athlete ID or any token from the request (e.g., from headers, cookies, etc.)
-    const athleteId = req.headers['authorization']; 
-    if (!athleteId) {
-      throw new Error('Unauthorized');
+    const { email, password } = req.body;
+    // Find the session based on email
+    const session = await Session.findOne({ email });
+    if (!session) {
+      throw new Error('Invalid credentials');
+    }
+    // Compare password using bcrypt
+    const isPasswordMatch = await bcrypt.compare(password, session.password);
+    if (!isPasswordMatch) {
+      throw new Error('Invalid credentials');
     }
 
-    // Find the athlete based on the athleteId
-    const athlete = await Athlete.findById(athleteId);
-    if (!athlete) {
-      throw new Error('Athlete not found');
-    }
+    // Attach the session object to the request object
+    req.session = session;
 
-    // Attach the athlete object to the request object
-    req.athlete = athlete;
-
-    next(); 
+    next();
   } catch (error) {
     res.status(401).json({ error: error.message });
   }
 };
 
-module.exports = authenticate;
+module.exports = auth;

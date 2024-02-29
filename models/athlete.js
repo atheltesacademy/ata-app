@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
 const athleteSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  phone: { type: String, unique: true },
+  email: { type: String, required: true,unique:true},
+  password:{type:String,},
+  phone: { type: String,},
   name: { type: String, },
-  password:{type:String, required:true},
   dob: { type: String, },
   address: { type: String },
   alternative_contact: { type: String },
@@ -15,9 +15,6 @@ const athleteSchema = new mongoose.Schema({
     type: String,
     default: 'athlete',
   },
-
 });
-
-const Athlete = mongoose.model('Athlete', athleteSchema);
-
-module.exports = Athlete;
+athleteSchema.index({ email: 1 }, { unique: true });
+module.exports =mongoose.model('Athlete', athleteSchema);

@@ -1,59 +1,51 @@
 const mongoose = require('mongoose');
 
 const coachSchema = new mongoose.Schema({
-    coach_id: {
-        type: String,
-        required: true
-      },
     coach_name: {
         type: String,
-       
     },
-    coach_email:{type:String,
-    required:true,
-     unique:true},
-    coach_phone: {
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    password: { type: String },
+    phone: {
         type: String,
     },
     coach_dob: {
         type: String,
-      
     },
     coach_address: {
         type: String,
-       
     },
     coach_detail_experience: {
         type: String,
-       
     },
     coach_domains: {
         type: [String],
-       
-      },
+    },
     coach_rating: {
-        type: Number, 
+        type: Number,
     },
     coach_languages: {
         type: [String],
-       
     },
     coach_charges: {
         type: Number,
-        
     },
     coach_currency: {
         type: String,
-      
     },
     coach_available: {
         type: Boolean,
-        
     },
     sport_name: {
         type: [String],
-       
     }
 }, { timestamps: true });
+
+
+coachSchema.index({ email: 1 }, { unique: true }); // Unique index on email field
 
 module.exports = mongoose.model('Coach', coachSchema);
