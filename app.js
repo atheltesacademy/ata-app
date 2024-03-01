@@ -18,7 +18,7 @@ const reviewRoutes = require('./routes/review');
 const chatRoutes = require('./routes/chat');
 const walletRoutes = require('./routes/wallet');
 const session = require('./routes/session');
-const auth = require("./middlewares/auth");
+// const auth = require("./middlewares/auth");
 
 app.use("/api/v1", athlete);
 app.use("/api/v1", coach);
@@ -27,6 +27,6 @@ app.use('/api/v1', reviewRoutes);
 app.use('/api/v1', chatRoutes);
 app.use('/api/v1', walletRoutes);
 app.use('/api/v1', session);
-app.use('/api/v1', auth); 
+// app.use('/api/v1', auth); 
 
 module.exports = app;

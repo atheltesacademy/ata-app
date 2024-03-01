@@ -3,14 +3,15 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const sessionSchema = new mongoose.Schema({
+    user_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        refPath: 'user_type' // specify the refPath instead of ref
+    },
     email: {
         type: String,
         required: true,
         unique: true
-    },
-    password: {
-        type: String,
-        required: true
     },
     user_type: {
         type: String,
@@ -19,6 +20,7 @@ const sessionSchema = new mongoose.Schema({
     },
     access_token: {
         type: String,
+        required:true,
     },
     created_at: {
         type: Date,
@@ -37,12 +39,6 @@ const sessionSchema = new mongoose.Schema({
     },
 });
 
-sessionSchema.pre("save", async function (next) {
-    if (this.isModified("password")) {
-        this.password = await bcrypt.hash(this.password, 10);
-    }
-    next();
-});
 // Method to compare passwords
 sessionSchema.methods.comparePassword = async function (password) {
     try {
@@ -55,4 +51,18 @@ sessionSchema.methods.comparePassword = async function (password) {
 sessionSchema.methods.generateToken = function () {
     return jwt.sign({ _id: this._id }, process.env.JWT_SECRET);
 };
+
+// Hash password after saving to database
+sessionSchema.post('save', function (doc, next) {
+    if (this.isModified('password')) {
+        this.password = bcrypt.hashSync(this.password, 10);
+    }
+    next();
+});
+
+// Populate user_id field with the corresponding Athlete or Coach document
+sessionSchema.pre('findOne', function () {
+    this.populate('user_id', '-_id name');
+});
 module.exports = mongoose.model('Session', sessionSchema);
+
