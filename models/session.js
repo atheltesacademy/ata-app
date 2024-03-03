@@ -65,4 +65,3 @@ sessionSchema.pre('findOne', function () {
     this.populate('user_id', '-_id name');
 });
 module.exports = mongoose.model('Session', sessionSchema);
-

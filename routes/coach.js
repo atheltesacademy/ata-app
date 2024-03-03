@@ -7,4 +7,3 @@ router.put("/detailsCoachlist", coach.detailsCoachlist);
 router.get('/coaches', coach.getAllCoacheslist); 
 
 module.exports = router;
-

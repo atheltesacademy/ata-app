@@ -17,4 +17,4 @@ const athleteSchema = new mongoose.Schema({
   },
 });
 athleteSchema.index({ email: 1 }, { unique: true });
-module.exports =mongoose.model('Athlete', athleteSchema);
+module.exports = mongoose.model('Athlete', athleteSchema);
