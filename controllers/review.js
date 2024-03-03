@@ -1,4 +1,3 @@
-
 const Review = require('../models/review');
 
 // Create a new review
@@ -10,7 +9,6 @@ exports.createReview = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
 // Get all reviews
 exports.getAllReviews = async (req, res) => {
     try {
@@ -20,7 +18,6 @@ exports.getAllReviews = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
 // Get review by ID
 exports.getReviewById = async (req, res) => {
     try {
@@ -33,7 +30,6 @@ exports.getReviewById = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
 // Update review by ID
 exports.updateReviewById = async (req, res) => {
     try {
