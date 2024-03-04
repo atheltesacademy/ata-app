@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const athlete = require('../controllers/athlete');
+const Athlete = require('../controllers/athlete');
 
-router.put("/detailignup", athlete.createAthlete);
-router.put("/detailSignup", athlete.detailAthlete);
-router.post("/getAllAthletesdetails", athlete.getAllAthletes);
+router.put("/detailignup", Athlete.createAthlete);
+router.put("/detailSignup", Athlete.detailAthlete);
+router.post("/getAllAthletesdetails", Athlete.getAllAthletes);
 
 module.exports = router;

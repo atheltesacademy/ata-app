@@ -5,7 +5,6 @@ const bcrypt = require('bcrypt');
 const generateToken = (session) => {
     return jwt.sign({ id: session._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
-
 const auth = async (req, res, next) => {
     try {
         const { email, password } = req.body;
@@ -19,7 +18,6 @@ const auth = async (req, res, next) => {
         if (!isPasswordMatch) {
             throw new Error('Invalid password');
         }
-
         // Generate and attach the JWT token to the request object
         req.session = session;
         req.token = generateToken(session);

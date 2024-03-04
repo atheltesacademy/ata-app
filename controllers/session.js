@@ -19,13 +19,11 @@ exports.signup = async (req, res) => {
         if (req.body.password !== req.body.confirmPassword) {
             throw new Error("Passwords do not match");
         }
-
         // Check if a session with the same email already exists
         const existingSession = await Session.findOne({ email: req.body.email });
         if (existingSession) {
             throw new Error("Email already exists");
         }
-
         // Hash password using bcrypt
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         let newUser;
@@ -54,37 +52,40 @@ exports.signup = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
-
 exports.login = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, user_type } = req.body;
     try {
-        // Ensure email and password are valid strings
-        if (typeof email !== 'string' || typeof password !== 'string') {
-            throw new Error('Invalid email or password');
-        }
-
         // Find the session based on email
         const session = await Session.findOne({ email });
         if (!session) {
-            throw new Error('no account registered with this email ');
+            throw new Error('No account registered with this email');
+        }
+        // Check if the user type in the session matches the request
+        if (session.user_type !== user_type) {
+            throw new Error('Invalid user type');
+        }
+        let user;
+        // Query the athlete or coach database based only on the user_type from the session
+        if (user_type === 'athlete') {
+            user = await Athlete.findOne({ email: session.email });
+        } else if (user_type === 'coach') {
+            user = await Coach.findOne({ email: session.email });
+        }
+        if (!user) {
+            throw new Error(`No ${user_type} account registered with this email`);
         }
         // Compare password using bcrypt
-        const isPasswordMatch = await bcrypt.compare(password, session.password);
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (!isPasswordMatch) {
             throw new Error('Invalid password');
         }
-        //@TODO: check for expiry tokens
         // Generate JWT token
-        const token = jwt.sign({ user_id: session._id, email }, process.env.JWT_SECRET);
-        
-        const newSession = await Session.create({ email: req.body.email, user_id:newUser._id,access_token:token,user_type: req.body.user_type });
-        // Save the new session to the database
-        await newSession.save();
+        const token = jwt.sign({ user_id: user._id, email }, process.env.JWT_SECRET);
 
         res.status(200).json({
             message: 'User logged in successfully',
-            user_id: session._id.toString(),
-            user_type: session.user_type, // Set user_type based on the session
+            user_id: user._id.toString(),
+            user_type, // Set user_type based on the session
             access_token: token
         });
     } catch (error) {
@@ -107,29 +108,34 @@ exports.updatePassword = async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
         const { session } = req;
-        if (!session) throw new Error('unauthorized user!');
+        if (!session) throw new Error('Unauthorized user!');
 
-        // Logging the newPassword and session.password
-        console.log('newPassword:', newPassword);
-        console.log('session.password:', session.password);
+        // Query the athlete or coach database based on user_type from the session
+        let user;
+        if (session.user_type === 'athlete') {
+            user = await Athlete.findById(session.user_id);
+        } else if (session.user_type === 'coach') {
+            user = await Coach.findById(session.user_id);
+        }
 
-        // // Saving the logs in the database
-        // await Log.create({
-        //     message: `New password: ${newPassword}, Session password: ${session.password}`,
-        //     createdAt: new Date()
-        // });
+        if (!user) {
+            throw new Error('User not found');
+        }
 
         if (!oldPassword || !newPassword) {
             throw new Error('Both old and new passwords are required');
         }
-        // Ensure oldPassword and session.password are valid strings
-        //check with parsing as well-sql injection
-        if (typeof oldPassword !== 'string' || typeof session.password !== 'string') {
-            throw new Error('Invalid password data');
-        }
+
         // Compare old password
-        const isPasswordMatch = await bcrypt.compare(oldPassword, session.password);
+        const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
         if (!isPasswordMatch) throw new Error('Old password is incorrect');
+
+        // Hash the new password
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update the user's password
+        user.password = hashedNewPassword;
+        await user.save();
 
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {
