@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 
 // Function to generate JWT token
 const generateToken = (userId) => {
-    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Adjust expiry time as needed
+    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Adjust expiry time as needed 
 };
 exports.signup = async (req, res) => {
     try {
@@ -14,7 +14,6 @@ exports.signup = async (req, res) => {
         if (typeof req.body.email !== 'string' || typeof req.body.password !== 'string' || typeof req.body.confirmPassword !== 'string') {
             throw new Error('Invalid email or password');
         }
-
         // Check if password and confirmPassword match
         if (req.body.password !== req.body.confirmPassword) {
             throw new Error("Passwords do not match");
@@ -24,7 +23,9 @@ exports.signup = async (req, res) => {
         if (existingSession) {
             throw new Error("Email already exists");
         }
+
         // Hash password using bcrypt
+
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
         let newUser;
         if (req.body.userType === 'athlete') {
@@ -47,11 +48,11 @@ exports.signup = async (req, res) => {
         // Save the new session to the database
         await newSession.save();
         res.status(201).json({ message: "Registration successful", user_type: req.body.userType, token, _id: newUser._id });
-       
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 };
+
 exports.login = async (req, res) => {
     const { email, password, user_type } = req.body;
     try {
