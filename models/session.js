@@ -6,12 +6,11 @@ const sessionSchema = new mongoose.Schema({
     user_id: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        refPath: 'user_type' // specify the refPath instead of ref
     },
     email: {
         type: String,
         required: true,
-        unique: true
+        unique: true,
     },
     user_type: {
         type: String,

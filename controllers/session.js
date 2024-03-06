@@ -1,6 +1,6 @@
-const Session = require('../models/session');
 const Athlete = require('../models/athlete');
 const Coach = require('../models/coach');
+const Session = require('../models/session');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -25,57 +25,60 @@ exports.signup = async (req, res) => {
         }
 
         // Hash password using bcrypt
-
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        
         let newUser;
         if (req.body.userType === 'athlete') {
             // Create a new entry in the Athlete table
             newUser = new Athlete({ email: req.body.email, password: hashedPassword });
-           
         } else if (req.body.userType === 'coach') {
             // Create a new entry in the Coach table
             newUser = new Coach({ email: req.body.email, password: hashedPassword });
-
         } else {
             throw new Error("Invalid user type");
         }
-         // Save the new athlete or coach entry
-         await newUser.save();
+
+        // Save the new athlete or coach entry
+        await newUser.save();
+
         // Generate JWT token
         const token = generateToken(newUser._id);
 
-        const newSession = await Session.create({ email: req.body.email, user_id:newUser._id,access_token:token,user_type: req.body.user_type });
+        // Create a new session
+        const newSession = await Session.create({ email: req.body.email, user_id: newUser._id, access_token: token, user_type: req.body.userType });
         // Save the new session to the database
         await newSession.save();
-        res.status(201).json({ message: "Registration successful", user_type: req.body.userType, token, _id: newUser._id });
+
+        // Send the response with the token and user ID
+        res.status(201).json({ message: "Registration successful", user_type: req.body.userType, token, user_id: newUser._id });
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 };
-
 exports.login = async (req, res) => {
-    const { email, password, user_type } = req.body;
+    const { email, password, } = req.body;
+    console.log('hello world');
     try {
         // Find the session based on email
         const session = await Session.findOne({ email });
         if (!session) {
             throw new Error('No account registered with this email');
         }
-        // Check if the user type in the session matches the request
-        if (session.user_type !== user_type) {
-            throw new Error('Invalid user type');
-        }
+      
         let user;
         // Query the athlete or coach database based only on the user_type from the session
-        if (user_type === 'athlete') {
+        if (session.user_type === 'athlete') {
             user = await Athlete.findOne({ email: session.email });
-        } else if (user_type === 'coach') {
+        } else if (session.user_type === 'coach') {
             user = await Coach.findOne({ email: session.email });
         }
         if (!user) {
-            throw new Error(`No ${user_type} account registered with this email`);
+            throw new Error(`No account registered with this email`);
         }
+
         // Compare password using bcrypt
+        console.log(password,user.password);
+
         const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (!isPasswordMatch) {
             throw new Error('Invalid password');
@@ -86,7 +89,7 @@ exports.login = async (req, res) => {
         res.status(200).json({
             message: 'User logged in successfully',
             user_id: user._id.toString(),
-            user_type, // Set user_type based on the session
+           
             access_token: token
         });
     } catch (error) {
