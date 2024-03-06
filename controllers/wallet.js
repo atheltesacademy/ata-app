@@ -1,4 +1,5 @@
 const Wallet = require('../models/wallet');
+const Session = require('../models/session');
 
 // Get wallet amount
 exports.getWalletAmount = async (req, res) => {
@@ -13,7 +14,6 @@ exports.getWalletAmount = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
 // Add money in the wallet
 exports.addMoney = async (req, res) => {
     try {

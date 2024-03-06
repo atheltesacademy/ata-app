@@ -27,38 +27,50 @@ exports.detailsCoach = async (req, res) => {
 };
 exports.detailsCoachlist = async (req, res) => {
     try {
-        const { coach_name, coach_phone, coach_dob, coach_address, domains, coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name } = req.body;
+        const { coach_name, email, coach_dob, coach_address, domains, coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name } = req.body;
 
-         // Check if coach email already exists
-         const existingCoach = await Coach.findOne({ coach_phone });
+        // Find the existing coach by email
+        let existingCoach = await Coach.findOne({ email });
 
-         if (existingCoach) {
-             throw new Error("Coach with this phone number already exists");
-         }
-        // Create new coach details list entry
-        const newCoach = await Coach.create({ coach_phone, coach_address, coach_dob, coach_name, domains,coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name });
+        // If coach exists, update the details; otherwise, return an error
+        if (existingCoach) {
+            existingCoach = await Coach.findOneAndUpdate(
+                { email },
+                {
+                    coach_name,
+                    coach_dob,
+                    coach_address,
+                    domains,
+                    coach_rating,
+                    coach_languages,
+                    coach_charges,
+                    coach_currency,
+                    coach_available,
+                    sport_name
+                },
+                { new: true }
+            );
 
-        res.status(201).json({
-            message: "Coach details list is here",
-            coach_id: newCoach._id.toString(),
-            coach_phone,
-            coach_address,
-            coach_dob,
-            coach_name,
-            domains,
-            coach_rating,
-            coach_languages,
-            coach_charges,
-            coach_currency,
-            coach_available,
-            sport_name
-
-        });
-    } catch (error){
-    (error.code === 11000 && error.keyPattern && error.keyPattern.email)
-     {
-        res.status(400).json({ message: error.message });
-    }}
+            res.status(200).json({
+                message: "Coach details updated successfully",
+                email: existingCoach.email,
+                coach_address: existingCoach.coach_address,
+                coach_dob: existingCoach.coach_dob,
+                coach_name: existingCoach.coach_name,
+                domains: existingCoach.domains,
+                coach_rating: existingCoach.coach_rating,
+                coach_languages: existingCoach.coach_languages,
+                coach_charges: existingCoach.coach_charges,
+                coach_currency: existingCoach.coach_currency,
+                coach_available: existingCoach.coach_available,
+                sport_name: existingCoach.sport_name
+            });
+        } else {
+            res.status(400).json({ error: "Coach with this email does not exist" });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 };
 exports.getCoachesBySport = async (req, res) => {
     try {
@@ -71,12 +83,12 @@ exports.getCoachesBySport = async (req, res) => {
         const formattedCoaches = coaches.map(coach => ({
             coach_id: coach._id.toString(),
             coach_name: coach.coach_name,
-            rating: coach.rating,
+            coach_rating: coach.coach_rating,
             domains: coach.domains,
-            languages: coach.languages,
-            charges: coach.charges,
-            currency: coach.currency,
-            available: coach.available
+            coach_languages: coach.coach_languages,
+            coach_charges: coach.coach_charges,
+            coach_currency: coach.coach_currency,
+            coach_available: coach.coach_available
         }));
 
         res.status(200).json({ coaches: formattedCoaches });
@@ -102,16 +114,16 @@ exports.getCoachDetailsBycoachId = async (req, res) => {
             coach_name: coach.coach_name,
             coach_details: {
                 email: coach.email,
-                phone: coach.phone,
-                dob: coach.dob,
-                address: coach.address,
+                coach_phone: coach.coach_phone,
+                coach_dob: coach.coach_dob,
+                coach_address: coach.coach_address,
                 detail_experience: coach.detail_experience,
-                rating: coach.rating,
+                coach_rating: coach.coach_rating,
                 domains: coach.domains,
-                languages: coach.languages,
-                charges: coach.charges,
-                currency: coach.currency,
-                available: coach.available
+                coach_languages: coach.coach_languages,
+                coach_charges: coach.coach_charges,
+                coach_currency: coach.coach_currency,
+                coach_available: coach.coach_available
             }
         };
 

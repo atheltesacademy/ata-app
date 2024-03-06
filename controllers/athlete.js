@@ -19,7 +19,6 @@ exports.createAthlete = async (req, res) => {
     if (!athlete) {
       throw new Error("Athlete not found");
     }
-
     // Create new athlete instance
     const athlete = new Athlete({
       phone,
@@ -32,7 +31,6 @@ exports.createAthlete = async (req, res) => {
 
     // Save the athlete to the database
     await athlete.save();
-
     res.status(201).json({ message: "Athlete created successfully", athlete });
   } catch (error) {
     if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
@@ -42,29 +40,32 @@ exports.createAthlete = async (req, res) => {
 };
 exports.detailAthlete = async (req, res) => {
   try {
-    const { email, name, phone, dob, address, domains, detail_experience, user_type } = req.body;
+    const { email, name, phone, dob, address,alternative_contact,health_height_desc, user_type } = req.body;
 
-    // Create new athlete instance
-    const athlete = new Athlete({
-      email,
-      name,
-      phone,
-      dob,
-      address,
-      domains,
-      detail_experience,
-      user_type
-    });
+    // Check if an athlete with the provided email already exists
+    const existingAthlete = await Athlete.findOne({ email });
 
-    // Save the athlete to the database
-    await athlete.save();
+    if (existingAthlete) {
+      // Update the athlete details
+      existingAthlete.name = name;
+      existingAthlete.phone = phone;
+      existingAthlete.dob = dob;
+      existingAthlete.address = address;
+      existingAthlete.health_height_desc = health_height_desc;
+      existingAthlete. alternative_contact=  alternative_contact;
+      existingAthlete.user_type = user_type;
 
-    res.status(201).json({ message: "Athlete created successfully", athlete });
+      // Save the updated athlete details
+      await existingAthlete.save();
+
+      res.status(200).json({ message: "Athlete details updated successfully", athlete: existingAthlete });
+    } else {
+      res.status(404).json({ error: "Athlete with the provided email does not exist" });
+    }
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
-
 // Controller function to get all athletes
 exports.getAllAthletes = async (req, res) => {
   try {

@@ -1,5 +1,6 @@
 const Athlete = require('../models/athlete');
 const Coach = require('../models/coach');
+const Wallet = require('../models/wallet'); 
 const Session = require('../models/session');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -26,11 +27,15 @@ exports.signup = async (req, res) => {
 
         // Hash password using bcrypt
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
-        
+
         let newUser;
         if (req.body.userType === 'athlete') {
             // Create a new entry in the Athlete table
             newUser = new Athlete({ email: req.body.email, password: hashedPassword });
+            
+            // Create a new wallet entry for the athlete with an initial amount of $100
+            const wallet = new Wallet({ athlete_id: newUser._id, amount: 100 });
+            await wallet.save();
         } else if (req.body.userType === 'coach') {
             // Create a new entry in the Coach table
             newUser = new Coach({ email: req.body.email, password: hashedPassword });
@@ -57,7 +62,6 @@ exports.signup = async (req, res) => {
 };
 exports.login = async (req, res) => {
     const { email, password, } = req.body;
-    console.log('hello world');
     try {
         // Find the session based on email
         const session = await Session.findOne({ email });
@@ -98,44 +102,50 @@ exports.login = async (req, res) => {
 };
 exports.logout = async (req, res) => {
     try {
-        const { session } = req;
-        if (!session) throw new Error('Session not found');
+        const { email, user_type, } = req.body;
 
-        // Set loggedIn to false
-        session.loggedIn = false;
-        res.status(200).json({ message: 'Logout successful' });
+        // Check if all required parameters are provided
+        if (!email || !user_type ) {
+            throw new Error('All fields (email, user_type) are required');
+        }
+        req.session = null;
+
+        res.status(200).json({ message: 'User logged out successfully', user_id: 'string' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 exports.updatePassword = async (req, res) => {
+    const { email, old_password, new_password } = req.body;
     try {
-        const { oldPassword, newPassword } = req.body;
-        const { session } = req;
-        if (!session) throw new Error('Unauthorized user!');
+        // Check if all required parameters are provided
+        if (!email || !old_password || !new_password) {
+            throw new Error('All fields (email, old_password, new_password) are required');
+        }
 
-        // Query the athlete or coach database based on user_type from the session
         let user;
-        if (session.user_type === 'athlete') {
-            user = await Athlete.findById(session.user_id);
-        } else if (session.user_type === 'coach') {
-            user = await Coach.findById(session.user_id);
-        }
 
-        if (!user) {
-            throw new Error('User not found');
-        }
+        // Find the user based on email
+        const athlete = await Athlete.findOne({ email });
+        const coach = await Coach.findOne({ email });
 
-        if (!oldPassword || !newPassword) {
-            throw new Error('Both old and new passwords are required');
+        // Check if the user is an athlete or a coach
+        if (athlete) {
+            user = athlete;
+        } else if (coach) {
+            user = coach;
+        } else {
+            throw new Error('No account registered with this email');
         }
 
         // Compare old password
-        const isPasswordMatch = await bcrypt.compare(oldPassword, user.password);
-        if (!isPasswordMatch) throw new Error('Old password is incorrect');
+        const isPasswordMatch = await bcrypt.compare(old_password, user.password);
+        if (!isPasswordMatch) {
+            throw new Error('Old password is incorrect');
+        }
 
         // Hash the new password
-        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        const hashedNewPassword = await bcrypt.hash(new_password, 10);
 
         // Update the user's password
         user.password = hashedNewPassword;
@@ -143,6 +153,6 @@ exports.updatePassword = async (req, res) => {
 
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(401).json({ error: error.message });
     }
 };
