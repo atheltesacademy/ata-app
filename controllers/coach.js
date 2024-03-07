@@ -1,4 +1,7 @@
+const mongoose = require('mongoose');
 const Coach = require('../models/coach');
+const Review = require('../models/review');
+const Sport = require('../models/sport');
 const Session = require('../models/session');
 
 exports.detailsCoach = async (req, res) => {
@@ -27,7 +30,7 @@ exports.detailsCoach = async (req, res) => {
 };
 exports.signupDetailsCoach = async (req, res) => {
     try {
-        const {  email,coach_name,coach_phone, coach_dob, coach_address, domains,detail_experience} = req.body;
+        const { email, coach_name, coach_phone, coach_dob, coach_address, domains, detail_experience } = req.body;
 
         // Find the existing coach by email
         let existingCoach1 = await Coach.findOne({ email });
@@ -43,16 +46,16 @@ exports.signupDetailsCoach = async (req, res) => {
                     coach_address,
                     domains,
                     detail_experience
-                    
                 },
                 { new: true }
             );
 
             res.status(200).json({
                 message: "Coach details updated successfully",
+                coach_id: existingCoach1._id, // Include coach ID
                 email: existingCoach1.email,
                 coach_name: existingCoach1.coach_name,
-                coach_phone:existingCoach1.coach_phone,
+                coach_phone: existingCoach1.coach_phone,
                 coach_dob: existingCoach1.coach_dob,
                 domains: existingCoach1.domains,
                 coach_address: existingCoach1.coach_address,
@@ -65,7 +68,8 @@ exports.signupDetailsCoach = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-exports.detailsCoachlist = async (req, res) => {
+
+exports.detailsCoaches= async (req, res) => {
     try {
         const { coach_name, email, domains, coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name } = req.body;
 
@@ -109,12 +113,47 @@ exports.detailsCoachlist = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+exports.getCoaches = async (req, res) => {
+    try {
+        const coaches = await Coach.find({}, '_id coach_name coach_rating domains coach_languages coach_charges coach_currency coach_available');
+        const formattedCoaches = coaches.map(coach => ({
+            coach_id: coach._id.toString(),
+            coach_name: coach.coach_name,
+            rating: coach.coach_rating, // Corrected field name
+            domains: coach.domains,
+            languages: coach.coach_languages, // Corrected field name
+            charges: coach.coach_charges, // Corrected field name
+            currency: coach.coach_currency,
+            available: coach.coach_available
+        }));
+
+        res.status(200).json({ coaches: formattedCoaches });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 exports.getCoachesBySport = async (req, res) => {
     try {
         const sport_id = req.params.sport_id;
 
+        // Check if the sport_id is in the correct format
+        if (!mongoose.Types.ObjectId.isValid(sport_id)) {
+        console.log("Sport ID:", sport_id);
+
+            return res.status(400).json({ error: "Invalid sport_id format" });
+        }
+
+        // Find the sport based on the sport_id
+        const sport = await Sport.findById(sport_id);
+
+        // Check if the sport exists
+        if (!sport) {
+            return res.status(404).json({ message: "Sport not found" });
+        }
+
         // Find coaches for the specified sport
-        const coaches = await Coach.find({ sport_id });
+        const coaches = await Coach.find({ domains: sport.sport_name });
 
         // Format the response
         const formattedCoaches = coaches.map(coach => ({
@@ -133,6 +172,7 @@ exports.getCoachesBySport = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 exports.getCoachDetailsBycoachId = async (req, res) => {
     try {
         const coach_id = req.params.coach_id;
@@ -144,23 +184,22 @@ exports.getCoachDetailsBycoachId = async (req, res) => {
         if (!coach) {
             return res.status(404).json({ message: "Coach not found" });
         }
-
         // Format the response
         const coachDetails = {
             coach_id: coach._id.toString(),
             coach_name: coach.coach_name,
             coach_details: {
                 email: coach.email,
-                coach_phone: coach.coach_phone,
-                coach_dob: coach.coach_dob,
-                coach_address: coach.coach_address,
+                phone: coach.coach_phone, 
+                dob: coach.coach_dob,
+                address: coach.coach_address,
                 detail_experience: coach.detail_experience,
-                coach_rating: coach.coach_rating,
+                rating: coach.coach_rating,
                 domains: coach.domains,
-                coach_languages: coach.coach_languages,
-                coach_charges: coach.coach_charges,
-                coach_currency: coach.coach_currency,
-                coach_available: coach.coach_available
+                languages: coach.coach_languages,
+                charges: coach.coach_charges,
+                currency: coach.coach_currency,
+                available: coach.coach_available
             }
         };
 
@@ -169,33 +208,42 @@ exports.getCoachDetailsBycoachId = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-exports.getAllCoacheslist = async (req, res) => {
+exports.getCoachReview = async (req, res) => {
     try {
-        const coaches = await Coach.find();
-        res.status(200).json({ success: true, coaches });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-exports.getCoaches = async (req, res) => {
-    try {
-        const coaches = await Coach.find({}, '_id coach_name rating domains languages charges currency available');
-        const formattedCoaches = coaches.map(coach => ({
-            coach_id: coach._id.toString(),
-            coach_name: coach.coach_name,
-            coach_rating: coach.coach_rating,
-            domains: coach.domains,
-            coach_languages: coach.coach_languages,
-            coach_charges: coach.coach_charges,
-            coach_currency: coach.coach_currency,
-            coach_available: coach.coach_available
+        const coach_id = req.params.coach_id;
+
+        // Check if coach_id is valid
+        if (!coach_id) {
+            return res.status(400).json({ message: "Coach ID is required" });
+        }
+
+        // Find coach by coach_id
+        const coach = await Coach.findById(coach_id);
+
+        // Check if coach exists
+        if (!coach) {
+            return res.status(404).json({ message: "Coach not found" });
+        }
+
+        // Retrieve reviews for the coach
+        const reviews = await Review.find({ coach_id });
+
+        // Format the response
+        const formattedReviews = reviews.map(review => ({
+            review_id: review._id.toString(),
+            rating: review.rating,
+            comment: review.comment,
+            timestamp: review.timestamp
         }));
 
-        res.status(200).json({ coaches: formattedCoaches });
+        res.status(200).json({ reviews: formattedReviews });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({ error: error.message });
     }
 };
+
+
+
 exports.getAllCoacheslist = async (req, res) => {
     try {
         const coaches = await Coach.find();

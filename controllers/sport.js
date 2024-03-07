@@ -1,17 +1,23 @@
 const Sport = require('../models/sport');
 
-// Create a new sport
+// Create Sport
 exports.createSport = async (req, res) => {
     try {
-        const {sport_name} = req.body;
-        const existingSport = await Sport.findOne({sport_name});
-        if (existingSport){
-            throw new Error('this sport already exists.');
+        const { sport_name } = req.body;
+
+        // Check if the sport name already exists
+        const existingSport = await Sport.findOne({ sport_name });
+        if (existingSport) {
+            throw new Error('This sport already exists.');
         }
-        
-        const sport = await Sport.create(req.body);
+
+        // Create the new sport with the provided details
+        const sport = await Sport.create({ sport_name });
+
+        // Return the newly created sport with success status
         res.status(201).json({ success: true, sport });
     } catch (error) {
+        // If there's an error, return an error message with the appropriate status code
         res.status(500).json({ success: false, message: error.message });
     }
 };

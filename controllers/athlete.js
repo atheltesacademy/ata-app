@@ -21,6 +21,7 @@ exports.createAthlete = async (req, res) => {
     }
     // Create new athlete instance
     const athlete = new Athlete({
+     
       phone,
       name,
       dob,
@@ -31,7 +32,7 @@ exports.createAthlete = async (req, res) => {
 
     // Save the athlete to the database
     await athlete.save();
-    res.status(201).json({ message: "Athlete created successfully", athlete });
+    res.status(201).json({ message: "Athlete created successfully", athlete_id: athlete._id, athlete: athlete });
   } catch (error) {
     if (error.code === 11000 && error.keyPattern && error.keyPattern.email) {
       res.status(400).json({ error: error.message });
@@ -40,13 +41,14 @@ exports.createAthlete = async (req, res) => {
 };
 exports.detailAthlete = async (req, res) => {
   try {
-    const { email, name, phone, dob, address,alternative_contact,health_height_desc, user_type } = req.body;
+    const { athlete_id,email, name, phone, dob, address,alternative_contact,health_height_desc, user_type } = req.body;
 
     // Check if an athlete with the provided email already exists
     const existingAthlete = await Athlete.findOne({ email });
 
     if (existingAthlete) {
       // Update the athlete details
+      existingAthlete.athlete_id = athlete_id; // Include athlete ID
       existingAthlete.name = name;
       existingAthlete.phone = phone;
       existingAthlete.dob = dob;
@@ -58,7 +60,7 @@ exports.detailAthlete = async (req, res) => {
       // Save the updated athlete details
       await existingAthlete.save();
 
-      res.status(200).json({ message: "Athlete details updated successfully", athlete: existingAthlete });
+      res.status(200).json({ message: "Athlete details updated successfully", athlete_id: existingAthlete._id, athlete: existingAthlete });
     } else {
       res.status(404).json({ error: "Athlete with the provided email does not exist" });
     }
@@ -77,3 +79,4 @@ exports.getAllAthletes = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
