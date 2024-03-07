@@ -3,6 +3,7 @@ const router = express.Router();
 const coach = require('../controllers/coach');
 
 router.put("/detailsCoach", coach.detailsCoach);
+router.put("/signupdetailsCoach", coach.signupDetailsCoach);
 router.put("/detailsCoachlist", coach.detailsCoachlist);
 router.get('/getcoachesBySport', coach.getCoachesBySport); 
 router.get('/getallcoaches', coach.getAllCoacheslist); 

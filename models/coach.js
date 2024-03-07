@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const coachSchema = new mongoose.Schema({
+  // coach_id:{type : String},
   coach_name: { type: String, },
   coach_phone: { type: String },
   coach_dob: { type: Date },
@@ -8,6 +9,7 @@ const coachSchema = new mongoose.Schema({
   email: { type: String,  unique: true },
   password: { type:String },
   domains:[{type:String}],
+  detail_experience:{type:String},
   coach_rating: { type: Number, default: 0 },
   coach_languages: [{ type: String }],
   coach_charges:[{ type: Number }],

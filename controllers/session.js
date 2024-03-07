@@ -66,7 +66,8 @@ exports.login = async (req, res) => {
         // Find the session based on email
         const session = await Session.findOne({ email });
         if (!session) {
-            throw new Error('No account registered with this email');
+            res.status(404).json({ error:'No account registered with this email'});
+        
         }
       
         let user;
@@ -77,9 +78,9 @@ exports.login = async (req, res) => {
             user = await Coach.findOne({ email: session.email });
         }
         if (!user) {
-            throw new Error(`No account registered with this email`);
+            res.status(404).json({ error:'No account registered with this email'});
+        
         }
-
         // Compare password using bcrypt
         console.log(password,user.password);
 

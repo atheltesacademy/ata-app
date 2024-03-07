@@ -25,9 +25,49 @@ exports.detailsCoach = async (req, res) => {
         }
     }
 };
+exports.signupDetailsCoach = async (req, res) => {
+    try {
+        const {  email,coach_name,coach_phone, coach_dob, coach_address, domains,detail_experience} = req.body;
+
+        // Find the existing coach by email
+        let existingCoach1 = await Coach.findOne({ email });
+
+        // If coach exists, update the details; otherwise, return an error
+        if (existingCoach1) {
+            existingCoach1 = await Coach.findOneAndUpdate(
+                { email },
+                {
+                    coach_name,
+                    coach_phone,
+                    coach_dob,
+                    coach_address,
+                    domains,
+                    detail_experience
+                    
+                },
+                { new: true }
+            );
+
+            res.status(200).json({
+                message: "Coach details updated successfully",
+                email: existingCoach1.email,
+                coach_name: existingCoach1.coach_name,
+                coach_phone:existingCoach1.coach_phone,
+                coach_dob: existingCoach1.coach_dob,
+                domains: existingCoach1.domains,
+                coach_address: existingCoach1.coach_address,
+                detail_experience: existingCoach1.detail_experience,
+            });
+        } else {
+            res.status(404).json({ error: "Coach with this email does not exist" });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 exports.detailsCoachlist = async (req, res) => {
     try {
-        const { coach_name, email, coach_dob, coach_address, domains, coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name } = req.body;
+        const { coach_name, email, domains, coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name } = req.body;
 
         // Find the existing coach by email
         let existingCoach = await Coach.findOne({ email });
@@ -38,8 +78,6 @@ exports.detailsCoachlist = async (req, res) => {
                 { email },
                 {
                     coach_name,
-                    coach_dob,
-                    coach_address,
                     domains,
                     coach_rating,
                     coach_languages,
@@ -53,9 +91,8 @@ exports.detailsCoachlist = async (req, res) => {
 
             res.status(200).json({
                 message: "Coach details updated successfully",
+                coach_id: existingCoach._id, // Include coach ID
                 email: existingCoach.email,
-                coach_address: existingCoach.coach_address,
-                coach_dob: existingCoach.coach_dob,
                 coach_name: existingCoach.coach_name,
                 domains: existingCoach.domains,
                 coach_rating: existingCoach.coach_rating,
@@ -146,12 +183,12 @@ exports.getCoaches = async (req, res) => {
         const formattedCoaches = coaches.map(coach => ({
             coach_id: coach._id.toString(),
             coach_name: coach.coach_name,
-            rating: coach.rating,
+            coach_rating: coach.coach_rating,
             domains: coach.domains,
-            languages: coach.languages,
-            charges: coach.charges,
-            currency: coach.currency,
-            available: coach.available
+            coach_languages: coach.coach_languages,
+            coach_charges: coach.coach_charges,
+            coach_currency: coach.coach_currency,
+            coach_available: coach.coach_available
         }));
 
         res.status(200).json({ coaches: formattedCoaches });
