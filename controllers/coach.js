@@ -139,13 +139,14 @@ exports.getCoachesBySport = async (req, res) => {
 
         // Check if the sport_id is in the correct format
         if (!mongoose.Types.ObjectId.isValid(sport_id)) {
-        console.log("Sport ID:", sport_id);
-
             return res.status(400).json({ error: "Invalid sport_id format" });
         }
 
+        // Convert the string sport_id to ObjectId
+        const sportObjectId = new mongoose.Types.ObjectId(sport_id);
+
         // Find the sport based on the sport_id
-        const sport = await Sport.findById(sport_id);
+        const sport = await Sport.findById(sportObjectId);
 
         // Check if the sport exists
         if (!sport) {
@@ -154,9 +155,11 @@ exports.getCoachesBySport = async (req, res) => {
 
         // Find coaches for the specified sport
         const coaches = await Coach.find({ domains: sport.sport_name });
+       
 
         // Format the response
         const formattedCoaches = coaches.map(coach => ({
+            
             coach_id: coach._id.toString(),
             coach_name: coach.coach_name,
             coach_rating: coach.coach_rating,
@@ -166,13 +169,12 @@ exports.getCoachesBySport = async (req, res) => {
             coach_currency: coach.coach_currency,
             coach_available: coach.coach_available
         }));
-
+        console.log("fruhnojcnre" )
         res.status(200).json({ coaches: formattedCoaches });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
-
 exports.getCoachDetailsBycoachId = async (req, res) => {
     try {
         const coach_id = req.params.coach_id;
@@ -241,9 +243,50 @@ exports.getCoachReview = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+exports.getAvailableCoaches = async (req, res) => {
+    try {
+        // Find coaches where available is true
+        const coaches = await Coach.find({ available: true });
 
+        // Format the response
+        const formattedCoaches = coaches.map(coach => ({
+            coach_id: coach._id.toString(),
+            coach_name: coach.coach_name,
+            rating: coach.coach_rating,
+            domains: coach.domains,
+            languages: coach.coach_languages,
+            charges: coach.coach_charges,
+            currency: coach.coach_currency,
+            available: coach.available
+        }));
 
+        res.status(200).json({ coaches: formattedCoaches });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+exports.getRecommendedCoaches = async (req, res) => {
+    try {
+        // Find coaches sorted by rating in descending order (higher ratings first)
+        const coaches = await Coach.find().sort({ coach_rating: -1 });
 
+        // Format the response
+        const formattedCoaches = coaches.map(coach => ({
+            coach_id: coach._id.toString(),
+            coach_name: coach.coach_name,
+            rating: coach.coach_rating,
+            domains: coach.domains,
+            languages: coach.coach_languages,
+            charges: coach.coach_charges,
+            currency: coach.coach_currency,
+            available: coach.available
+        }));
+
+        res.status(200).json({ coaches: formattedCoaches });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
 exports.getAllCoacheslist = async (req, res) => {
     try {
         const coaches = await Coach.find();

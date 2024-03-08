@@ -1,23 +1,19 @@
+const mongoose = require('mongoose');
 const Sport = require('../models/sport');
-
 // Create Sport
 exports.createSport = async (req, res) => {
     try {
         const { sport_name } = req.body;
 
-        // Check if the sport name already exists
-        const existingSport = await Sport.findOne({ sport_name });
-        if (existingSport) {
-            throw new Error('This sport already exists.');
-        }
+        // Generate a unique ID for the new sport
+        const sport_id = new mongoose.Types.ObjectId(); // Generate a new ObjectId
 
         // Create the new sport with the provided details
-        const sport = await Sport.create({ sport_name });
+        const sport = await Sport.create({ sport_id, sport_name });
 
-        // Return the newly created sport with success status
+        // Return the newly created sport with success status and sport ID
         res.status(201).json({ success: true, sport });
     } catch (error) {
-        // If there's an error, return an error message with the appropriate status code
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -65,7 +61,7 @@ exports.deleteSportById = async (req, res) => {
         if (!sport) {
             return res.status(404).json({ success: false, message: 'Sport not found' });
         }
-        res.status(200).json({ success: true, message: 'Sport deleted successfully' });
+        res.status(200).json({ success: true, sport });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
