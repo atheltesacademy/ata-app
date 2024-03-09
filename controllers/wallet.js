@@ -30,7 +30,6 @@ exports.addMoney = async (req, res) => {
                 transactions: [] // Initialize transactions array
             });
         }
-
         // Update the wallet amount
         wallet.amount += amount;
 
@@ -53,20 +52,6 @@ exports.addMoney = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
-// Get wallet transactions history
-// exports.getWalletTransactions = async (req, res) => {
-//     try {
-//         const athlete_id = req.params.athlete_id;
-//         const wallet = await Wallet.findOne({ athlete_id });
-//         if (!wallet) {
-//             return res.status(404).json({ success: false, message: 'Wallet not found' });
-//         }
-//         res.status(200).json({ success: true, transactions: wallet.transactions });
-//     } catch (error) {
-//         res.status(500).json({ success: false, message: error.message });
-//     }
-// };
 exports.getWalletTransactions = async (req, res) => {
     try {
         // Retrieve athlete ID from request body
