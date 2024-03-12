@@ -7,12 +7,15 @@ const reviewSchema = new mongoose.Schema({
     coach_id: {
          type: mongoose.Schema.Types.ObjectId, 
          ref: 'Coach', 
-         required: true 
+        
         },
     athlete_id: {
             type: mongoose.Schema.Types.ObjectId, 
             ref: 'athlete', 
-            required: true 
+           
+           },
+     review_id:{
+            type:String,
            },
     rating: { 
         type: Number, 
