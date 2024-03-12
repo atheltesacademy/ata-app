@@ -141,7 +141,6 @@ exports.getRecommendedCoaches = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
 exports.getAllCoacheslist = async (req, res) => {
     try {
         const coaches = await Coach.find();

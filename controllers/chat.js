@@ -15,7 +15,7 @@ exports.getCoachChats = async (req, res) => {
     try {
         const coach_id = req.params.coach_id;
         const chat = await Chat.find({ participant_id: coach_id }); // Use ChatHistory instead of chatHistory
-        res.status(200).json({ success: true, chatHistory });
+        res.status(200).json({ success: true, chat });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
