@@ -1,9 +1,11 @@
+
 const Athlete = require('../models/athlete');
 const Coach = require('../models/coach');
 const Wallet = require('../models/wallet'); 
 const Session = require('../models/session');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { v4: uuidv4 } = require('uuid');
 
 // Function to generate JWT token
 const generateToken = (userId) => {
@@ -37,8 +39,11 @@ exports.signup = async (req, res) => {
             const wallet = new Wallet({ athlete_id: newUser._id, amount: 100 });
             await wallet.save();
         } else if (req.body.userType === 'coach') {
-            // Create a new entry in the Coach table
-            newUser = new Coach({ email: req.body.email, password: hashedPassword });
+            // Generate a unique coach_id
+            const coach_id = uuidv4();
+
+            // Create a new entry in the Coach table with the generated coach_id
+            newUser = new Coach({ email: req.body.email, password: hashedPassword, coach_id });
         } else {
             throw new Error("Invalid user type");
         }
@@ -94,7 +99,6 @@ exports.login = async (req, res) => {
         res.status(200).json({
             message: 'User logged in successfully',
             user_id: user._id.toString(),
-           
             access_token: token
         });
     } catch (error) {
@@ -155,5 +159,87 @@ exports.updatePassword = async (req, res) => {
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {
         res.status(401).json({ error: error.message });
+    }
+};
+exports.signupDetails = async (req, res) => {
+    try {
+        const { email, user_type } = req.body;
+
+        // Check if the email exists in the session database
+        const existingSession = await Session.findOne({ email });
+
+        if (!existingSession) {
+            return res.status(400).json({ error: "Email not found in session database" });
+        }
+
+        // Check if the provided user_type matches the one in the session
+        if (existingSession.user_type !== user_type) {
+            return res.status(400).json({ error: "Provided user type does not match the one in session" });
+        }
+
+        // Check if the user type is athlete
+        if (user_type === 'athlete') {
+            const { name, phone, dob, address, alternative_contact, health_height_desc } = req.body;
+
+            // Check if the email exists in the Athlete database
+            let existingAthlete = await Athlete.findOne({ email });
+
+            if (existingAthlete) {
+                // Update the existing athlete's details
+                existingAthlete = await Athlete.findOneAndUpdate(
+                    { email },
+                    {
+                        name,
+                        phone,
+                        dob,
+                        address,
+                        alternative_contact,
+                        health_height_desc,
+                        user_type
+                    },
+                    { new: true }
+                );
+                return res.status(200).json({ message: "Athlete details updated successfully", user_id: existingAthlete._id, user_type });
+            } else {
+                // Create a new athlete entry
+                const newAthlete = await Athlete.create(req.body);
+                return res.status(201).json({ message: "Athlete details registered successfully", user_id: newAthlete._id, user_type });
+            }
+        } else if (user_type === 'coach') {
+            const { name, phone, dob, address, domains, coach_languages, detail_experience } = req.body;
+
+            // Generate a unique coach_id
+            const coach_id = uuidv4();
+
+            // Check if the email exists in the Coach database
+            let existingCoach = await Coach.findOne({ email });
+
+            if (existingCoach) {
+                // Update the existing coach's details
+                existingCoach = await Coach.findOneAndUpdate(
+                    { email },
+                    {
+                        name,
+                        phone,
+                        dob,
+                        address,
+                        domains,
+                        coach_languages,
+                        detail_experience,
+                        user_type
+                    },
+                    { new: true }
+                );
+                return res.status(200).json({ message: "Coach details updated successfully", user_id: existingCoach._id, user_type });
+            } else {
+                // Create a new coach entry with the generated coach_id
+                const newCoach = await Coach.create({ ...req.body, coach_id });
+                return res.status(201).json({ message: "Coach details registered successfully", user_id: newCoach._id, user_type });
+            }
+        } else {
+            return res.status(400).json({ error: "Invalid user type" });
+        }
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
     }
 };

@@ -2,8 +2,6 @@ const express = require('express');
 const router = express.Router();
 const Athlete = require('../controllers/athlete');
 
-router.put("/detailignup", Athlete.createAthlete);
-router.put("/details/signup/athlete", Athlete.detailAthlete);
-router.post("/getAllAthletesdetails", Athlete.getAllAthletes);
+router.get("/Athletes/details", Athlete.getAllAthletes);
 
 module.exports = router;

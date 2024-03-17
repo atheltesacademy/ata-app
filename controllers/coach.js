@@ -2,55 +2,10 @@ const mongoose = require('mongoose');
 const Coach = require('../models/coach');
 const Review = require('../models/review');
 const Sport = require('../models/sport');
-const Session = require('../models/session');
-
-exports.detailsCoach = async (req, res) => {
-    try {
-        const { email, password } = req.session;
-        const session = await Session.findOne({ email, password });
-        if (!session) {
-            throw new Error("Invalid session");
-        }
-        const coach = await Coach.findOne({ email: session.email }, 'email');
-        if (!coach) {
-            throw new Error("Coach not found");
-        }
-        res.status(200).json({ coach });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-};
-
-exports.signupDetailsCoach = async (req, res) => {
-    try {
-        const { email, coach_name, coach_phone, coach_dob, coach_languages,coach_address, domains, detail_experience } = req.body;
-        let existingCoach1 = await Coach.findOne({ email });
-        if (existingCoach1) {
-            existingCoach1 = await Coach.findOneAndUpdate(
-                { email },
-                {
-                    coach_name,
-                    coach_phone,
-                    coach_dob,
-                    coach_languages,
-                    coach_address,
-                    domains,
-                    detail_experience
-                },
-                { new: true }
-            );
-            res.status(200).json({ message: "Coach details updated successfully", coach: existingCoach1 });
-        } else {
-            res.status(404).json({ error: "Coach with this email does not exist" });
-        }
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
 
 exports.detailsCoaches = async (req, res) => {
     try {
-        const { email, coach_name, domains, coach_rating, coach_languages, coach_charges, coach_currency, coach_available, sport_name } = req.body;
+        const { email, coach_name, domains, coach_rating, coach_languages, coach_charges, coach_currency, coach_available,  } = req.body;
         let existingCoach = await Coach.findOne({ email });
         if (existingCoach) {
             existingCoach = await Coach.findOneAndUpdate(
@@ -63,7 +18,7 @@ exports.detailsCoaches = async (req, res) => {
                     coach_charges,
                     coach_currency,
                     coach_available,
-                    sport_name
+                    
                 },
                 { new: true }
             );

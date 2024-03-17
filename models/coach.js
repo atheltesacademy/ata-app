@@ -20,7 +20,6 @@ const coachSchema = new mongoose.Schema({
   coach_available: { type: Boolean, default: false,},
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
-  sport_name:{type:String},
   user_type: {
     type: String,
     default: 'coach',
