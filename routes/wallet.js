@@ -9,6 +9,6 @@ router.get('/wallet/:athlete_id', wallet.getWalletAmount);
 router.post('/add', wallet.addMoney);
 
 // Get wallet transactions history
-router.get('/wallet/transactions', wallet.getWalletTransactions);
+router.get('/wallet/transactions/:athlete_id', wallet.getWalletTransactions);
 
 module.exports = router;

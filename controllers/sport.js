@@ -5,11 +5,9 @@ exports.createSport = async (req, res) => {
     try {
         const { sport_name } = req.body;
 
-        // Generate a unique ID for the new sport
-        const sport_id = new mongoose.Types.ObjectId(); // Generate a new ObjectId
-
+      
         // Create the new sport with the provided details
-        const sport = await Sport.create({ sport_id, sport_name });
+        const sport = await Sport.create({ sport_name });
 
         // Return the newly created sport with success status and sport ID
         res.status(201).json({ success: true, sport });

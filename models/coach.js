@@ -4,6 +4,7 @@ const coachSchema = new mongoose.Schema({
   coach_id: { type: mongoose.Schema.Types.ObjectId, 
     ref: 'coach', 
     type:String,},
+
   coach_name: { type: String },
   coach_phone: { type: String },
   coach_dob: { type: Date },
@@ -17,9 +18,9 @@ const coachSchema = new mongoose.Schema({
   coach_charges: [{ type: Number }],
   coach_currency: { type: String },
   coach_available: { type: Boolean, default: false,},
-  sport_name: { type: String },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
+  sport_name:{type:String},
   user_type: {
     type: String,
     default: 'coach',

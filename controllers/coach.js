@@ -23,7 +23,7 @@ exports.detailsCoach = async (req, res) => {
 
 exports.signupDetailsCoach = async (req, res) => {
     try {
-        const { email, coach_name, coach_phone, coach_dob, coach_address, domains, detail_experience } = req.body;
+        const { email, coach_name, coach_phone, coach_dob, coach_languages,coach_address, domains, detail_experience } = req.body;
         let existingCoach1 = await Coach.findOne({ email });
         if (existingCoach1) {
             existingCoach1 = await Coach.findOneAndUpdate(
@@ -32,6 +32,7 @@ exports.signupDetailsCoach = async (req, res) => {
                     coach_name,
                     coach_phone,
                     coach_dob,
+                    coach_languages,
                     coach_address,
                     domains,
                     detail_experience
@@ -83,15 +84,32 @@ exports.getCoaches = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-exports.getCoachesBySport = async (req, res) => {
+//write a controllers for getting a sport by sport _id
+exports.getCoachesBySportId = async (req, res) => {
     try {
-        const sport_id = req.params.sport_id;
-        const sport = await Sport.findOne({ sport_id });
+        const sportId = req.params.sport_id;
+        const sport = await Sport.findById(sportId);
+       
         if (!sport) {
             return res.status(404).json({ message: "Sport not found" });
         }
-        const coaches = await Coach.find({ domains: sport.sport_name });
+        const coaches = await Coach.find({ domains: { $in: sportId } }); // Assuming `domains` refers to the sport `_id`
+        res.status(200).json({ coaches });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+exports.getCoachesBySportName = async (req, res) => {
+    
+    try {
+        const sportName = req.params.sport_name; // assuming this is the correct property name
+        const sport = await Sport.find({ sport_name: sportName });
+       
+        if (!sport) {
+            return res.status(404).json({ message: "Sport not found" });
+        }
+
+        const coaches = await Coach.find({ domains: { $in: [sport[0]._id] } });// Assuming `domains` refers to the sport `_id`
         res.status(200).json({ coaches });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -113,6 +131,7 @@ exports.getCoachDetailsBycoachId = async (req, res) => {
 
 exports.getCoachReview = async (req, res) => {
     try {
+        
         const coach_id = req.params.coach_id;
         if (!coach_id) {
             return res.status(400).json({ message: "Coach ID is required" });
@@ -126,12 +145,14 @@ exports.getCoachReview = async (req, res) => {
 
 exports.getAvailableCoaches = async (req, res) => {
     try {
-        const coaches = await Coach.find({ coach_available: true }, 'coach_name coach_rating domains coach_languages coach_charges coach_currency coach_available');
+    
+        const coaches = await Coach.find({coach_available:true} ,'_id coach_name coach_rating domains coach_languages coach_charges coach_currency coach_available');
         res.status(200).json({ coaches });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 
 exports.getRecommendedCoaches = async (req, res) => {
     try {
@@ -141,6 +162,7 @@ exports.getRecommendedCoaches = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 exports.getAllCoacheslist = async (req, res) => {
     try {
         const coaches = await Coach.find();
@@ -149,3 +171,41 @@ exports.getAllCoacheslist = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+// exports.toggleCoachAvailability = async (req, res) => {
+//     const coachId = req.params.coach_id;
+//     const { available } = req.body;
+
+//     try {
+//         // Find the coach by ID
+//         const coach = await Coach.findById(coachId);
+
+//         if (!coach) {
+//             return res.status(404).json({ message: "Coach not found" });
+//         }
+
+//         // Update the availability status
+//         coach.available = available;
+//         await coach.save();
+
+//         res.status(200).json({
+//             message: "Coach availability toggled successfully",
+//             coach_id: coachId,
+//             new_availability: available
+//         });
+//     } catch (error) {
+//         res.status(500).json({ error: error.message });
+//     }
+// };

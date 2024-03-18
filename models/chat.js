@@ -1,4 +1,3 @@
-
 const mongoose = require('mongoose');
 
 const chatSchema = new mongoose.Schema({
@@ -21,7 +20,6 @@ const chatHistorySchema = new mongoose.Schema({
         type: String,
         required: true
     },
-   
     chats: [chatSchema]
 });
 
