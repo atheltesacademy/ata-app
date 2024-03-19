@@ -206,7 +206,7 @@ exports.signupDetails = async (req, res) => {
                 return res.status(201).json({ message: "Athlete details registered successfully", user_id: newAthlete._id, user_type });
             }
         } else if (user_type === 'coach') {
-            const { name, phone, dob, address, domains, coach_languages, detail_experience } = req.body;
+            const { coach_name, coach_phone, coach_dob, coach_address, domains, coach_languages, detail_experience } = req.body;
 
             // Generate a unique coach_id
             const coach_id = uuidv4();
@@ -219,10 +219,10 @@ exports.signupDetails = async (req, res) => {
                 existingCoach = await Coach.findOneAndUpdate(
                     { email },
                     {
-                        name,
-                        phone,
-                        dob,
-                        address,
+                        coach_name,
+                        coach_phone,
+                        coach_dob,
+                        coach_address,
                         domains,
                         coach_languages,
                         detail_experience,
