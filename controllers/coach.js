@@ -97,6 +97,36 @@ exports.getCoachReview = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+exports.toggleAvailability = async (req, res) => {
+    try {
+        const { coach_id } = req.params;
+        const { available} = req.body;
+
+        // Validate the coach_id parameter
+        if (!coach_id) {
+            return res.status(400).json({ error: "Coach ID is required" });
+        }
+        // Validate the availability payload
+        if (typeof available !== 'boolean') {
+            return res.status(400).json({ error: "Invalid availability value. It should be a boolean." });
+        }
+        // Find the coach by coach_id
+        const coach = await Coach.findById(coach_id);
+
+        if (!coach) {
+            return res.status(404).json({ error: "Coach not found" });
+        }
+
+        // Update the availability of the coach
+        coach.coach_available = available;
+        await coach.save();
+
+        return res.status(200).json({ message: "Coach availability toggled successfully", coach_id, new_availability: available });
+    } catch (error) {
+        console.error("Error toggling coach availability:", error);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+};
 
 exports.getAvailableCoaches = async (req, res) => {
     try {
@@ -108,7 +138,6 @@ exports.getAvailableCoaches = async (req, res) => {
     }
 };
 
-
 exports.getRecommendedCoaches = async (req, res) => {
     try {
         const coaches = await Coach.find().sort({ coach_rating: -1 });
@@ -117,7 +146,40 @@ exports.getRecommendedCoaches = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+exports.updateCoachRates= async (req, res)=> {
+    console.log("coach for rate charges and currency not found")
+    const coachId = req.params.coach_id;
+    const { currency, charges } = req.body;
 
+    try {
+        // Find the coach by ID
+     
+        let coach = await Coach.findById(coachId);
+
+        if (!coach) {
+            return res.status(404).json({ message: "Coach not found" });
+        }
+
+        // Update coach currency and charges
+        coach.coach_currency = currency;
+        coach.coach_charges = charges;
+
+        // Save the updated coach
+        await coach.save();
+
+        // Respond with success message and updated coach details
+        res.json({
+            message: "Coach rates updated successfully",
+            coach_id: coach._id,
+            currency: coach.coach_currency,
+            charges: coach.coach_charges
+        });
+    } catch (error) {
+        // Handle errors
+        console.error("Error updating coach rates:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
 exports.getAllCoacheslist = async (req, res) => {
     try {
         const coaches = await Coach.find();

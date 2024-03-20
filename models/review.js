@@ -1,5 +1,3 @@
-// models/review.js
-
 const mongoose = require('mongoose');
 
 const reviewSchema = new mongoose.Schema({
@@ -13,9 +11,6 @@ const reviewSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId, 
             ref: 'athlete', 
            
-           },
-     review_id:{
-            type:String,
            },
     rating: { 
         type: Number, 

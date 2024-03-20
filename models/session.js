@@ -33,10 +33,6 @@ const sessionSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
-    loggedIn: {
-        type: Boolean, default: false
-    },
-    
 });
 
 // Method to compare passwords

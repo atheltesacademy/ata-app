@@ -1,11 +1,9 @@
 const mongoose = require('mongoose');
 const Sport = require('../models/sport');
-// Create Sport
+
 exports.createSport = async (req, res) => {
     try {
         const { sport_name } = req.body;
-
-      
         // Create the new sport with the provided details
         const sport = await Sport.create({ sport_name });
 
@@ -16,7 +14,6 @@ exports.createSport = async (req, res) => {
     }
 };
 
-// Get all sports
 exports.getAllSports = async (req, res) => {
     try {
         const sports = await Sport.find();

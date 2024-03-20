@@ -1,11 +1,10 @@
 
 const Athlete = require('../models/athlete');
 const Coach = require('../models/coach');
-const Wallet = require('../models/wallet'); 
+const Wallet = require('../models/wallet');
 const Session = require('../models/session');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { v4: uuidv4 } = require('uuid');
 
 // Function to generate JWT token
 const generateToken = (userId) => {
@@ -32,18 +31,15 @@ exports.signup = async (req, res) => {
 
         let newUser;
         if (req.body.userType === 'athlete') {
-            // Create a new entry in the Athlete table
+            // Create a new entry in the Athlete table with default ObjectId as _id
             newUser = new Athlete({ email: req.body.email, password: hashedPassword });
-            
+
             // Create a new wallet entry for the athlete with an initial amount of $100
             const wallet = new Wallet({ athlete_id: newUser._id, amount: 100 });
             await wallet.save();
         } else if (req.body.userType === 'coach') {
-            // Generate a unique coach_id
-            const coach_id = uuidv4();
-
-            // Create a new entry in the Coach table with the generated coach_id
-            newUser = new Coach({ email: req.body.email, password: hashedPassword, coach_id });
+            // Create a new entry in the Coach table, letting MongoDB generate _id automatically
+            newUser = new Coach({ email: req.body.email, password: hashedPassword });
         } else {
             throw new Error("Invalid user type");
         }
@@ -65,16 +61,16 @@ exports.signup = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 };
+
 exports.login = async (req, res) => {
     const { email, password, } = req.body;
     try {
         // Find the session based on email
         const session = await Session.findOne({ email });
         if (!session) {
-            res.status(404).json({ error:'No account registered with this email'});
-        
+            res.status(404).json({ error: 'No account registered with this email' });
+
         }
-      
         let user;
         // Query the athlete or coach database based only on the user_type from the session
         if (session.user_type === 'athlete') {
@@ -83,12 +79,10 @@ exports.login = async (req, res) => {
             user = await Coach.findOne({ email: session.email });
         }
         if (!user) {
-            res.status(404).json({ error:'No account registered with this email'});
-        
+            res.status(404).json({ error: 'No account registered with this email' });
+
         }
         // Compare password using bcrypt
-        console.log(password,user.password);
-
         const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (!isPasswordMatch) {
             throw new Error('Invalid password');
@@ -110,7 +104,7 @@ exports.logout = async (req, res) => {
         const { email, user_type, } = req.body;
 
         // Check if all required parameters are provided
-        if (!email || !user_type ) {
+        if (!email || !user_type) {
             throw new Error('All fields (email, user_type) are required');
         }
         req.session = null;
@@ -195,21 +189,16 @@ exports.signupDetails = async (req, res) => {
                         address,
                         alternative_contact,
                         health_height_desc,
-                        user_type
+
                     },
                     { new: true }
                 );
                 return res.status(200).json({ message: "Athlete details updated successfully", user_id: existingAthlete._id, user_type });
             } else {
-                // Create a new athlete entry
-                const newAthlete = await Athlete.create(req.body);
-                return res.status(201).json({ message: "Athlete details registered successfully", user_id: newAthlete._id, user_type });
+                throw new Error("Unauthorized User ! ")
             }
         } else if (user_type === 'coach') {
             const { coach_name, coach_phone, coach_dob, coach_address, domains, coach_languages, detail_experience } = req.body;
-
-            // Generate a unique coach_id
-            const coach_id = uuidv4();
 
             // Check if the email exists in the Coach database
             let existingCoach = await Coach.findOne({ email });
@@ -226,15 +215,13 @@ exports.signupDetails = async (req, res) => {
                         domains,
                         coach_languages,
                         detail_experience,
-                        user_type
                     },
                     { new: true }
                 );
                 return res.status(200).json({ message: "Coach details updated successfully", user_id: existingCoach._id, user_type });
             } else {
-                // Create a new coach entry with the generated coach_id
-                const newCoach = await Coach.create({ ...req.body, coach_id });
-                return res.status(201).json({ message: "Coach details registered successfully", user_id: newCoach._id, user_type });
+
+                return res.status(201).json("unauthorized user !");
             }
         } else {
             return res.status(400).json({ error: "Invalid user type" });

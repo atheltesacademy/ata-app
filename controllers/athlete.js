@@ -1,5 +1,4 @@
 const Athlete = require('../models/athlete');
-const Session = require('../models/session');
 
 // Controller function to get all athletes
 exports.getAllAthletes = async (req, res) => {

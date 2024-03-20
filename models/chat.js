@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const chatSchema = new mongoose.Schema({
+const chats = new mongoose.Schema({
     participant_id: {
         type: mongoose.Schema.Types.ObjectId,
         required: true
@@ -20,7 +20,7 @@ const chatHistorySchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    chats: [chatSchema]
+    chats: [chats]
 });
 
 module.exports = mongoose.model('Chat', chatHistorySchema);
