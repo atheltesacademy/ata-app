@@ -195,7 +195,7 @@ exports.signupDetails = async (req, res) => {
                 );
                 return res.status(200).json({ message: "Athlete details updated successfully", user_id: existingAthlete._id, user_type });
             } else {
-                throw new Error("Unauthorized User ! ")
+                return res.status(404).json({ error: "Unauthorized user" });
             }
         } else if (user_type === 'coach') {
             const { coach_name, coach_phone, coach_dob, coach_address, domains, coach_languages, detail_experience } = req.body;
@@ -221,7 +221,7 @@ exports.signupDetails = async (req, res) => {
                 return res.status(200).json({ message: "Coach details updated successfully", user_id: existingCoach._id, user_type });
             } else {
 
-                return res.status(201).json("unauthorized user !");
+                return res.status(404).json({ error: "Unauthorized user" });
             }
         } else {
             return res.status(400).json({ error: "Invalid user type" });

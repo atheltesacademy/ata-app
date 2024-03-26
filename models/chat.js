@@ -16,10 +16,7 @@ const chats = new mongoose.Schema({
 });
 
 const chatHistorySchema = new mongoose.Schema({
-    chat_id: {
-        type: String,
-        required: true
-    },
+   
     chats: [chats]
 });
 
