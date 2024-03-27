@@ -11,6 +11,6 @@ router.get('/coaches/sport/:sport_name', coach.getCoachesBySportName);
 router.get('/coaches/sport/id/:sport_id', coach.getCoachesBySportId); 
 router.get('/coaches/:coach_id', coach.getCoachDetailsBycoachId); 
 router.get('/coaches/recommended', coach.getRecommendedCoaches);
-router.put('/coaches/id/:coach_id/rates', coach.updateCoachRates);
+router.put('/coaches/rates/:coach_id', coach.updateCoachRates);
 
 module.exports = router;

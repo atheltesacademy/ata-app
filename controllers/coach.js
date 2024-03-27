@@ -73,7 +73,7 @@ exports.getCoachesBySportName = async (req, res) => {
 exports.getCoachDetailsBycoachId = async (req, res) => {
     try {
         const coach_id = req.params.coach_id;
-        const coach = await Coach.findById(coach_id);
+        const coach = await Coach.findById(coach_id).select('-password');
         if (!coach) {
             return res.status(404).json({ message: "Coach not found" });
         }
@@ -85,7 +85,6 @@ exports.getCoachDetailsBycoachId = async (req, res) => {
 
 exports.getCoachReview = async (req, res) => {
     try {
-        
         const coach_id = req.params.coach_id;
         if (!coach_id) {
             return res.status(400).json({ message: "Coach ID is required" });
@@ -146,12 +145,12 @@ exports.getRecommendedCoaches = async (req, res) => {
     }
 };
 exports.updateCoachRates= async (req, res)=> {
-    console.log("coach for rate charges and currency not found")
-    const coachId = req.params.coach_id;
-    const { currency, charges } = req.body;
+  
+    const {coach_id} = req.params;
+    const { currency, charges,email} = req.body;
     try {
         // Find the coach by ID
-        let coach = await Coach.findById(coachId);
+        let coach = await Coach.findById(coach_id);
 
         if (!coach) {
             return res.status(404).json({ message: "Coach not found" });
@@ -168,15 +167,14 @@ exports.updateCoachRates= async (req, res)=> {
         res.json({
             message: "Coach rates updated successfully",
             coach_id: coach._id,
+            email:email,
             currency: coach.coach_currency,
             charges: coach.coach_charges
         });
     } catch (error) {
-        // Handle errors
-        console.error("Error updating coach rates:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ error:error.message });
     }
-}
+};
 exports.getAllCoacheslist = async (req, res) => {
     try {
         const coaches = await Coach.find();
