@@ -5,6 +5,7 @@ exports.createChat = async (req, res) => {
     try {
         const { chat_id, participant_id, message } = req.body;
         const chat = await Chat.create({ chat_id, participant_id, message });
+      
         res.status(201).json({ success: true, chat });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
