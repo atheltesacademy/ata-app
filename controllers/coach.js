@@ -3,7 +3,7 @@ const Coach = require('../models/coach');
 const Review = require('../models/review');
 const Sport = require('../models/sport');
 
-exports.detailsCoaches = async (req, res) => {
+exports.updateCoachDetails = async (req, res) => {
     try {
         const { email, coach_name, domains, coach_rating, coach_charges, coach_currency, coach_available,  } = req.body;
         let existingCoach = await Coach.findOne({ email });

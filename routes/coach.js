@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const coach = require('../controllers/coach');
 
-router.put("/coaches", coach.detailsCoaches); 
+router.put("/coaches", coach.updateCoachDetails); 
 router.get('/coaches', coach.getCoaches); 
 router.put('/coaches/:coach_id/availability', coach.toggleAvailability);
 router.get('/coaches/available', coach.getAvailableCoaches);
