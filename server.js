@@ -1,7 +1,7 @@
 const { server } = require("./app");
 const { connectDatabase } = require("./config/database");
 const WebSocket = require('ws');
-const Chat = require('./models/chat'); // Import your Chat model
+const Chat = require('./models/chat');// Import your Chat model
 const mongoose = require('mongoose');
 
 // Connect to the database
@@ -9,9 +9,19 @@ connectDatabase();
 
 // Create a WebSocket server
 const wss = new WebSocket.Server({ server });
+
+// Map to store client connections and their IDs
+const clients = new Map();
+
 // WebSocket connection handler
 wss.on('connection', (ws) => {
   console.log('New client connected');
+  
+  // Generate a unique ID for the client
+  const clientId = generateClientId();
+
+  // Store the client connection and its ID
+  clients.set(ws, clientId);
 
   // Handle incoming messages
   ws.on('message', async (message) => {
@@ -20,33 +30,54 @@ wss.on('connection', (ws) => {
     console.log('Received message:', data);
 
     try {
-      // Create a new Chat document
-      const chat = new Chat({
-        chats: [{
-          participant_id: new mongoose.Types.ObjectId(), 
-          message: data,
-          timestamp: new Date(),
-        }]
+      // Find or create chat document based on participant IDs
+      let chat = await Chat.findOne({ 'chats.participant_id': { $in: [clients.get(ws), ...clients.values()] } });
+
+      if (!chat) {
+        // If no chat exists, create a new one
+        chat = new Chat({
+          chats: [{
+            participant_id: clients.get(ws),
+            messages: [], // Initialize messages array
+            timestamp: new Date(),
+          }]
+        });
+      }
+
+      // Update existing chat document with new message
+      chat.chats.push({
+        participant_id: clients.get(ws),
+        message: data,
+        timestamp: new Date(),
       });
 
-      // Save the new chat document
+      // Save the updated/created chat document
       const savedChat = await chat.save();
       console.log('Chat saved:', savedChat);
-      
-      // Echo the received message back to the client
-      ws.send('Thanks for your message!');
+
+      // Broadcast the message to all clients except the sender
+      broadcastMessage(ws, data);
     } catch (error) {
       console.error('Error saving chat to database:', error);
       // Send an error message back to the client
       ws.send('Error saving chat to database');
     }
   });
-
-  // Handle client disconnection
-  ws.on('close', () => {
-    console.log('Client disconnected');
-  });
 });
+
+// Function to generate a unique client ID
+function generateClientId() {
+  return new mongoose.Types.ObjectId();
+}
+
+// Function to broadcast message to all clients except the sender
+function broadcastMessage(sender, message) {
+  clients.forEach((clientId, client) => {
+    if (client !== sender && client.readyState === WebSocket.OPEN) {
+      client.send(message);
+    }
+  });
+}
 
 // Start the server
 server.listen(process.env.PORT, () => {

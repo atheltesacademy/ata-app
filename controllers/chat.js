@@ -1,16 +1,150 @@
+// Import required modules
 const Chat = require('../models/chat');
+const Athlete = require('../models/athlete');
+const Coach = require('../models/coach');
+const WebSocket = require('ws');
 
-// Create a new chat
+// Initialize connectedClients as an object
+const connectedClients = {};
+
+// Function to handle incoming messages from clients and store them in the database
 exports.createChat = async (req, res) => {
     try {
-        const { chat_id, participant_id, message } = req.body;
-        const chat = await Chat.create({ chat_id, participant_id, message });
-      
+        const { athlete_id, coach_id, message } = req.body;
+
+        // Fetch athlete and coach records from the database
+        const athlete = await Athlete.findById(athlete_id);
+        const coach = await Coach.findById(coach_id);
+
+        if (!athlete || !coach) {
+            return res.status(404).json({ success: false, message: 'Athlete or coach not found' });
+        }
+
+        // Create or find the chat document based on both athlete and coach IDs
+        let chat = await Chat.findOneAndUpdate(
+            {
+                $or: [
+                    { athlete_id, coach_id },
+                    { athlete_id: coach_id, coach_id: athlete_id }
+                ]
+            },
+            {},
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+
+        // Determine the sender based on the current participants' IDs
+        const senderId = athlete_id === athlete._id.toString() ? athlete_id : coach_id;
+
+        // Determine the recipient based on the sender
+        const recipientId = senderId === athlete_id ? coach_id : athlete_id;
+
+        // Add the new message to the messages array
+        chat.messages.push({
+            sender_id: senderId,
+            text: message
+        });
+
+        // Save the chat document
+        await chat.save();
+        console.log('Chat saved:', chat);
+
+        // Send the message to the recipient
+        sendChatMessage(senderId, recipientId, {
+            type: 'chat',
+            chat_id: chat._id,
+            message: message,
+            timestamp: chat.messages[chat.messages.length - 1].timestamp // Get the timestamp of the last message
+        });
+
         res.status(201).json({ success: true, chat });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        console.error('Error creating chat:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
+
+// Function to send chat messages to recipients
+function sendChatMessage(senderId, recipientId, data) {
+    const recipientClient = connectedClients[recipientId];
+    if (recipientClient && recipientClient.readyState === WebSocket.OPEN) {
+        recipientClient.send(JSON.stringify(data));
+    } else {
+        console.error(`Recipient ${recipientId} WebSocket connection is not open or not found`);
+    }
+}
+
+
+// // Initialize connectedClients as a Map
+// const connectedClients = new Map();
+// exports.createChat = async (req, res) => {
+//     try {
+//         const { athlete_id, coach_id, message } = req.body;
+
+//         // Fetch athlete and coach records from the database
+//         const athlete = await Athlete.findById(athlete_id);
+//         const coach = await Coach.findById(coach_id);
+
+//         if (!athlete || !coach) {
+//             return res.status(404).json({ success: false, message: 'Athlete or coach not found' });
+//         }
+
+//         // Find or create the chat document based on both athlete and coach IDs
+//         let chat = await Chat.findOne({
+//             $or: [
+//                 { athlete_id: athlete_id, coach_id: coach_id },
+//                 { athlete_id: coach_id, coach_id: athlete_id }
+//             ]
+//         });
+
+//         if (!chat) {
+//             // If no chat exists, create a new one
+//             chat = new Chat({
+//                 athlete_id: athlete_id,
+//                 coach_id: coach_id,
+//                 messages: [] // Initialize messages array
+//             });
+//         }
+
+//         // Determine the sender based on the current participants' IDs
+//         const sender_id = athlete_id === athlete._id.toString() ? athlete_id : coach_id;
+
+//         // Determine the recipient based on the sender
+//         const recipient_id = sender_id === athlete_id ? coach_id : athlete_id;
+
+//         // Add the new message to the messages array
+//         chat.messages.push({
+//             sender_id: sender_id,
+//             text: message
+//         });
+
+//         // Save the chat document
+//         await chat.save();
+//         console.log('Chat saved:', chat);
+
+//         // Send the message to the recipient
+//         sendChatMessage(sender_id, recipient_id, {
+//             type: 'chat',
+//             chat_id: chat._id,
+//             message: message,
+//             timestamp: chat.messages.slice(-1)[0].timestamp // Get the timestamp of the last message
+//         });
+
+//         res.status(201).json({ success: true, chat });
+//     } catch (error) {
+//         console.error('Error creating chat:', error);
+//         res.status(500).json({ success: false, message: 'Internal server error' });
+//     }
+// };
+
+// function sendChatMessage(senderId, recipientId, data) {
+//     if (connectedClients.has(recipientId)) {
+//         const recipientClient = connectedClients.get(recipientId);
+//         if (recipientClient.readyState === WebSocket.OPEN) {
+//             recipientClient.send(JSON.stringify(data));
+//         }
+//     }
+// }
+
 // Get all history chats for coaches
 exports.getCoachChats = async (req, res) => {
     try {
