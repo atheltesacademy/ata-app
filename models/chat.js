@@ -1,24 +1,32 @@
+// chatModel.js
 const mongoose = require('mongoose');
 
-const chats = new mongoose.Schema({
-    participant_id: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true
-    },
-    message: {
+const chatSchema = new mongoose.Schema({
+    athlete_id: {
         type: String,
-        required: true
+        ref: 'Athlete'
     },
+    coach_id: {
+        type: String,
+        ref: 'Coach'
+    },
+    messages: [{
+        sender_id: {
+            type: String,
+            ref: 'User' // Assuming there's a User model containing both Athlete and Coach
+        },
+        text: {
+            type: String
+        },
+        timestamp: {
+            type: String,
+            default: Date.now().toString()
+        }
+    }],
     timestamp: {
-        type: Date,
-        default: Date.now
+        type: String,
+        default: Date.now().toString()
     }
 });
 
-const chatHistorySchema = new mongoose.Schema({
-   
-    chats: [chats]
-});
-
-module.exports = mongoose.model('Chat', chatHistorySchema);
-
+module.exports = mongoose.model('Chat', chatSchema);
