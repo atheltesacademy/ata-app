@@ -32,6 +32,11 @@ exports.createChat = async (req, res) => {
             { upsert: true, new: true, setDefaultsOnInsert: true }
         );
 
+        // Verify if chat object is properly initialized
+        if (!chat || !chat.messages) {
+            throw new Error('Failed to retrieve chat object from database or missing messages array.');
+        }
+
         // Determine the sender based on the current participants' IDs
         const senderId = athlete_id === athlete._id.toString() ? athlete_id : coach_id;
 
@@ -41,7 +46,8 @@ exports.createChat = async (req, res) => {
         // Add the new message to the messages array
         chat.messages.push({
             sender_id: senderId,
-            text: message
+            text: message,
+            timestamp: new Date() // Add timestamp when adding the message
         });
 
         // Save the chat document
@@ -66,13 +72,29 @@ exports.createChat = async (req, res) => {
 // Function to send chat messages to recipients
 function sendChatMessage(senderId, recipientId, data) {
     const recipientClient = connectedClients[recipientId];
+
+    // If recipient WebSocket connection is available, send the message
     if (recipientClient && recipientClient.readyState === WebSocket.OPEN) {
         recipientClient.send(JSON.stringify(data));
     } else {
-        console.error(`Recipient ${recipientId} WebSocket connection is not open or not found`);
+        // Recipient WebSocket connection not found or not open, open a new WebSocket connection
+        console.log(`Recipient ${recipientId} WebSocket connection is not open or not found, opening new connection...`);
+        
+        // Assuming WebSocket server is running on port ..
+        const newClient = new WebSocket('http://localhost:4000');
+
+        // Handle new WebSocket connection events
+        newClient.on('open', () => {
+            console.log(`New WebSocket connection established for ${recipientId}`);
+            connectedClients[recipientId] = newClient;
+            newClient.send(JSON.stringify(data)); // Send the message
+        });
+
+        newClient.on('error', (error) => {
+            console.error(`Error establishing WebSocket connection for ${recipientId}:`, error);
+        });
     }
 }
-
 
 // // Initialize connectedClients as a Map
 // const connectedClients = new Map();

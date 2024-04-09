@@ -31,13 +31,13 @@ wss.on('connection', (ws) => {
 
     try {
       // Find or create chat document based on participant IDs
-      let chat = await Chat.findOne({ 'chats.participant_id': { $in: [clients.get(ws), ...clients.values()] } });
+      let chat = await Chat.findOne({ 'chats.participant_id': { $in: [clientId, ...clients.values()] } });
 
       if (!chat) {
         // If no chat exists, create a new one
         chat = new Chat({
           chats: [{
-            participant_id: clients.get(ws),
+            participant_id: clientId,
             messages: [], // Initialize messages array
             timestamp: new Date(),
           }]
@@ -45,8 +45,8 @@ wss.on('connection', (ws) => {
       }
 
       // Update existing chat document with new message
-      chat.chats.push({
-        participant_id: clients.get(ws),
+      chat.chats[0].messages.push({
+        participant_id: clientId,
         message: data,
         timestamp: new Date(),
       });
