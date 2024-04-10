@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const sport = require('../controllers/sport');
 
-router.post('/sport', sport.createSport);
-router.get('/sports', sport.getAllSports);
-router.get('/sports/:id', sport.getSportById);
-router.put('/sports/:id', sport.updateSportById);
-router.delete('/sports/:id', sport.deleteSportById);
+router.post('/sport', checkTokenValidity, sport.createSport);
+router.get('/sports', checkTokenValidity, sport.getAllSports);
+router.get('/sports/:id', checkTokenValidity, sport.getSportById);
+router.put('/sports/:id', checkTokenValidity, sport.updateSportById);
+router.delete('/sports/:id',  checkTokenValidity, sport.deleteSportById);
 
 module.exports = router;

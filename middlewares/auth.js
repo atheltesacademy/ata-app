@@ -27,4 +27,26 @@ const auth = async (req, res, next) => {
         res.status(401).json({ error: error.message });
     }
 };
-module.exports = auth;
+
+// Middleware to check token validity
+function checkTokenValidity(req, res, next) {
+    // Get the token from the request headers or cookies
+    const token = req.headers.authorization.split(' ')[1];
+    // Check if the token is in the blacklist (pseudo code)
+    if (blacklist.includes(token)) {
+        return res.status(401).json({ message: 'Invalid token' });
+    }
+    // Verify the token (if needed) and proceed
+    jwt.verify(token, 'your-secret-key', (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ message: 'Invalid token' });
+        }
+        req.user = decoded; // Set user information for subsequent middleware or routes
+        next();
+    });
+}
+
+module.exports = {
+    auth,
+    checkTokenValidity
+};
