@@ -33,6 +33,7 @@ exports.getAthleteChats = async (req, res) => {
 };
 
 // Get all chats
+//TODO it only be accessible to admin
 exports.getAllChats = async (req, res) => {
     try {
         const chats = await Chat.find();

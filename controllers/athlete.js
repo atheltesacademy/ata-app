@@ -1,5 +1,6 @@
 const Athlete = require('../models/athlete');
 
+//ToDo only be accessible to the user whose session/access_token is of admin role...
 // Controller function to get all athletes
 exports.getAllAthletes = async (req, res) => {
   try {
