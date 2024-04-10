@@ -36,8 +36,6 @@ exports.getCoaches = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-//write a controllers for getting a sport by sport _id
 exports.getCoachesBySportId = async (req, res) => {
     try {
         const sportId = req.params.sport_id;
@@ -52,7 +50,7 @@ exports.getCoachesBySportId = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-//get a controller for getting sport_id from sport_name
+
 exports.getCoachesBySportName = async (req, res) => {
     
     try {
@@ -173,13 +171,5 @@ exports.updateCoachRates= async (req, res)=> {
         });
     } catch (error) {
         res.status(500).json({ error:error.message });
-    }
-};
-exports.getAllCoacheslist = async (req, res) => {
-    try {
-        const coaches = await Coach.find();
-        res.status(200).json({ coaches });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
     }
 };
