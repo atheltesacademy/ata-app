@@ -25,7 +25,6 @@ exports.signup = async (req, res) => {
         if (existingSession) {
             throw new Error("This email already exists");
         }
-
         // Hash password using bcrypt
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
 
@@ -88,34 +87,28 @@ exports.login = async (req, res) => {
             throw new Error('Invalid password');
         }
 
-        // Generate JWT token
-        const token = jwt.sign({ user_id: user._id, email }, process.env.JWT_SECRET);
-
         // Check for existing session and update or create accordingly
         let existingSession = await Session.findOne({ email: user.email });
         
-        if (existingSession) {
-            // Update existing session
-            existingSession.access_token = token;
-            existingSession.user_id = user._id;
-          
-            await existingSession.save();
-        } else {
-            // Create a new session
-            const newSession = new Session({
-                email: user.email,
-                user_type: session.user_type,
-                access_token: token,
-                user_id: user._id
-            });
-            await newSession.save();
-            existingSession = newSession; // Set existingSession to newSession
+        if (!existingSession) {
+             // Generate JWT token
+        const token = jwt.sign({ user_id: user._id, email }, process.env.JWT_SECRET);
+
+           // Create a new session
+           const newSession = new Session({
+            email: user.email,
+            user_type: session.user_type,
+            access_token: token,
+            user_id: user._id
+        });
+        await newSession.save();
+        existingSession = newSession
         }
 
         res.status(200).json({
             message: 'User logged in successfully',
             user_id: user._id.toString(),
-            access_token: token
+            access_token: existingSession.access_token
         });
     } catch (error) {
         res.status(401).json({ error: error.message });
