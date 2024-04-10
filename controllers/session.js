@@ -23,7 +23,7 @@ exports.signup = async (req, res) => {
         // Check if a session with the same email already exists
         const existingSession = await Session.findOne({ email: req.body.email });
         if (existingSession) {
-            res.status(400).json({ error: "This email already exists!" });
+            throw new Error("This email already exists");
         }
 
         // Hash password using bcrypt
