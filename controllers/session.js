@@ -63,14 +63,14 @@ exports.signup = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-    const { email, password, } = req.body;
+    const { email, password } = req.body;
     try {
         // Find the session based on email
         const session = await Session.findOne({ email });
         if (!session) {
-            res.status(404).json({ error: 'No account registered with this email' });
-
+            return res.status(404).json({ error: 'No account registered with this email' });
         }
+
         let user;
         // Query the athlete or coach database based only on the user_type from the session
         if (session.user_type === 'athlete') {
@@ -79,16 +79,38 @@ exports.login = async (req, res) => {
             user = await Coach.findOne({ email: session.email });
         }
         if (!user) {
-            res.status(404).json({ error: 'No account registered with this email' });
-
+            return res.status(404).json({ error: 'No account registered with this email' });
         }
+
         // Compare password using bcrypt
         const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (!isPasswordMatch) {
             throw new Error('Invalid password');
         }
+
         // Generate JWT token
         const token = jwt.sign({ user_id: user._id, email }, process.env.JWT_SECRET);
+
+        // Check for existing session and update or create accordingly
+        let existingSession = await Session.findOne({ email: user.email });
+        
+        if (existingSession) {
+            // Update existing session
+            existingSession.access_token = token;
+            existingSession.user_id = user._id;
+          
+            await existingSession.save();
+        } else {
+            // Create a new session
+            const newSession = new Session({
+                email: user.email,
+                user_type: session.user_type,
+                access_token: token,
+                user_id: user._id
+            });
+            await newSession.save();
+            existingSession = newSession; // Set existingSession to newSession
+        }
 
         res.status(200).json({
             message: 'User logged in successfully',
@@ -101,19 +123,22 @@ exports.login = async (req, res) => {
 };
 exports.logout = async (req, res) => {
     try {
-        const { email, user_type, } = req.body;
+        const { email, user_type } = req.body;
 
         // Check if all required parameters are provided
         if (!email || !user_type) {
             throw new Error('All fields (email, user_type) are required');
         }
-        req.session = null;
+
+        // Invalidate the session by updating the 'invalidated' field
+        await Session.updateOne({ email, user_type }, { invalidated: true });
 
         res.status(200).json({ message: 'User logged out successfully', user_id: 'string' });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 exports.updatePassword = async (req, res) => {
     const { email, old_password, new_password } = req.body;
     try {

@@ -5,7 +5,7 @@ const coachSchema = new mongoose.Schema({
   coach_phone: { type: String },
   coach_dob: { type: Date },
   coach_address: { type: String },
-  email: { type: String, unique: true },
+  email: { type: String, unique: true, required:true },
   password: { type: String },
   domains: { type: [String] },
   detail_experience: { type: String },

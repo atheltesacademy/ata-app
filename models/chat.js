@@ -1,8 +1,14 @@
 const mongoose = require('mongoose');
 
-const chats = new mongoose.Schema({
-    participant_id: {
+const chatSchema = new mongoose.Schema({
+    athlete_id: {
         type: mongoose.Schema.Types.ObjectId,
+        ref: 'Athlete', // Reference to Athlete model
+        required: true
+    },
+    coach_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Coach', // Reference to Coach model
         required: true
     },
     message: {
@@ -16,9 +22,7 @@ const chats = new mongoose.Schema({
 });
 
 const chatHistorySchema = new mongoose.Schema({
-   
-    chats: [chats]
+    chats: [chatSchema]
 });
 
 module.exports = mongoose.model('Chat', chatHistorySchema);
-
