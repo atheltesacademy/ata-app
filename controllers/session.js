@@ -57,7 +57,7 @@ exports.signup = async (req, res) => {
         // Send the response with the token and user ID
         res.status(201).json({ message: "Registration successful", user_type: req.body.userType, token, user_id: newUser._id });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 };
 
@@ -111,7 +111,7 @@ exports.login = async (req, res) => {
             access_token: existingSession.access_token
         });
     } catch (error) {
-        res.status(401).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 };
 exports.logout = async (req, res) => {
@@ -170,7 +170,7 @@ exports.updatePassword = async (req, res) => {
 
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {
-        res.status(401).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 };
 exports.signupDetails = async (req, res) => {
@@ -213,7 +213,7 @@ exports.signupDetails = async (req, res) => {
                 );
                 return res.status(200).json({ message: "Athlete details updated successfully", user_id: existingAthlete._id, user_type });
             } else {
-                return res.status(404).json({ error: "Unauthorized user" });
+                return res.status(401).json({ error: "Unauthorized user" });
             }
         } else if (user_type === 'coach') {
             const { coach_name, coach_phone, coach_dob, coach_address, domains, coach_languages, detail_experience } = req.body;
@@ -239,7 +239,7 @@ exports.signupDetails = async (req, res) => {
                 return res.status(200).json({ message: "Coach details updated successfully", user_id: existingCoach._id, user_type });
             } else {
 
-                return res.status(404).json({ error: "Unauthorized user" });
+                return res.status(401).json({ error: "Unauthorized user" });
             }
         } else {
             return res.status(400).json({ error: "Invalid user type" });

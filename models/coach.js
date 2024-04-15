@@ -16,10 +16,9 @@ const coachSchema = new mongoose.Schema({
   coach_languages: [{ type: String }], 
   coach_charges: { type: Number },
   coach_currency: { type: String },
-  coach_available: { type: Boolean, default: false,},
+  coach_available: { type: Boolean, default: false},
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
-  
 });
 
 // Define index for email 

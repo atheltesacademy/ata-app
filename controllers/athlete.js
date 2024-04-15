@@ -7,11 +7,16 @@ exports.getAllAthletes = async (req, res) => {
     // Retrieve all athletes from the database
     const athletes = await Athlete.find();
 
+    if (athletes.length === 0) {
+      return res.status(404).json({ msg: "No records found" });
+    }
+
     res.status(200).json({ athletes });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
+
 exports.updateAthleteDetails = async (req, res) => {
   try {
       const { email, phone, name, dob, address, alternative_contact, health_height_desc } = req.body;
@@ -34,7 +39,7 @@ exports.updateAthleteDetails = async (req, res) => {
 
           res.status(200).json({ message: "Athlete details updated successfully", athlete: existingAthlete });
       } else {
-          res.status(400).json({ error: "Athlete with this email does not exist" });
+          res.status(404).json({ error: "Athlete with this email does not exist" });
       }
   } catch (error) {
       res.status(500).json({ error: error.message });

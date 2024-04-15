@@ -22,7 +22,7 @@ exports.updateCoachDetails = async (req, res) => {
             );
             res.status(200).json({ message: "Coach details updated successfully", coach: existingCoach });
         } else {
-            res.status(400).json({ error: "Coach with this email does not exist" });
+            res.status(404).json({ error: "Coach with this email does not exist" });
         }
     } catch (error) {
         res.status(500).json({ error: error.message });
