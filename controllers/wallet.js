@@ -72,7 +72,7 @@ exports.addMoney = async (req, res) => {
 
 exports.getWalletTransactions = async (req, res) => {
     try {
-        // Retrieve athlete ID from request body
+        // Retrieve athlete ID from request parameters
         const athlete_id = req.params.athlete_id; 
         // Check if athlete_id exists
         const athleteExists = await Athlete.exists({ _id: athlete_id });
@@ -85,17 +85,12 @@ exports.getWalletTransactions = async (req, res) => {
         if (!wallet) {
             return res.status(404).json({ success: false, message: 'Wallet not found' });
         }
-        // Extract transactions from the wallet
-        const transactions = wallet.transactions.map(transaction => ({
-            transaction_id: transaction.transaction_id,
-            amount: transaction.amount,
-            type: transaction.type,
-            timestamp: transaction.timestamp
-        }));
-
-        res.status(200).json({ success: true, transactions });
+        
+        // Return transactions directly from the wallet
+        res.status(200).json({ success: true, transactions: wallet.transactions });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 
