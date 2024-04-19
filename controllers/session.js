@@ -14,16 +14,18 @@ exports.signup = async (req, res) => {
     try {
         // Ensure email, password, and confirmPassword are valid strings
         if (typeof req.body.email !== 'string' || typeof req.body.password !== 'string' || typeof req.body.confirmPassword !== 'string') {
-            throw new Error('Invalid email or password');
+            res.status(400).json({ error: 'Invalid email or password' });
         }
         // Check if password and confirmPassword match
         if (req.body.password !== req.body.confirmPassword) {
-            throw new Error("Passwords do not match");
+            res.status(401).json({ error: 'Unauthorized' });
+
         }
         // Check if a session with the same email already exists
         const existingSession = await Session.findOne({ email: req.body.email });
         if (existingSession) {
-            throw new Error("This email already exists");
+            // throw new Error("This email already exists");
+            res.status(400).json({ error: 'This email already exists' });
         }
         // Hash password using bcrypt
         const hashedPassword = await bcrypt.hash(req.body.password, 10);
