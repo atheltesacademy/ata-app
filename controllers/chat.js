@@ -94,6 +94,96 @@ function sendChatMessage(senderId, recipientId, data) {
         });
     }
 }
+
+// // Initialize connectedClients as an object
+// const connectedClients = {};
+
+// // Function to handle incoming messages from clients and store them in the database
+// exports.createChat = async (req, res) => {
+//     try {
+//         const { athlete_id, coach_id, message } = req.body;
+
+//         // Fetch athlete and coach records from the database
+//         const athlete = await Athlete.findById(athlete_id);
+//         const coach = await Coach.findById(coach_id);
+
+//         if (!athlete || !coach) {
+//             return res.status(404).json({ success: false, message: 'Athlete or coach not found' });
+//         }
+
+//         // Create or find the chat document based on both athlete and coach IDs
+//         let chat = await Chat.findOneAndUpdate(
+//             {
+//                 $or: [
+//                     { athlete_id, coach_id },
+//                     { athlete_id: coach_id, coach_id: athlete_id }
+//                 ]
+//             },
+//             {},
+//             { upsert: true, new: true, setDefaultsOnInsert: true }
+//         );
+
+//         // Verify if chat object is properly initialized
+//         if (!chat || !chat.messages) {
+//             throw new Error('Failed to retrieve chat object from database or missing messages array.');
+//         }
+
+//         // Determine the sender based on the current participants' IDs
+//         const senderId = athlete_id === athlete._id.toString() ? athlete_id : coach_id;
+
+//         // Determine the recipient based on the sender
+//         const recipientId = senderId === athlete_id ? coach_id : athlete_id;
+
+//         // Add the new message to the messages array
+//         chat.messages.push({
+//             sender_id: senderId,
+//             text: message,
+//             timestamp: new Date() // Add timestamp when adding the message
+//         });
+
+//         // Save the chat document
+//         await chat.save();
+//         console.log('Chat saved:', chat);
+
+//         // Send the message to the recipient
+//         sendChatMessage(senderId, recipientId, {
+//             type: 'chat',
+//             chat_id: chat._id,
+//             message: message,
+//             timestamp: chat.messages[chat.messages.length - 1].timestamp // Get the timestamp of the last message
+//         });
+
+//         res.status(201).json({ success: true, chat });
+//     } catch (error) {
+//         console.error('Error creating chat:', error);
+//         res.status(500).json({ success: false, message: 'Internal server error' });
+//     }
+// };
+// // Function to send chat messages to recipients
+// function sendChatMessage(senderId, recipientId, data) {
+//     const recipientSocket = connectedClients[recipientId];
+
+//     // If recipient socket connection is available, send the message
+//     if (recipientSocket) {
+//         recipientSocket.emit('message', { ...data, athlete_id: senderId, coach_id: recipientId });
+//     } else {
+//         console.log(`Recipient ${recipientId} socket connection not found, attempting to authenticate...`);
+        
+//         // Authenticate the recipient and establish socket connection
+//         const recipientSocket = socketIOClient.connect('http://localhost:4000'); // Update with your server address
+//         recipientSocket.emit('authenticate', recipientId);
+
+//         recipientSocket.on('connect', () => {
+//             console.log(`Recipient ${recipientId} socket connection established`);
+//             connectedClients[recipientId] = recipientSocket;
+//             recipientSocket.emit('message', { ...data, athlete_id: senderId, coach_id: recipientId });
+//         });
+
+//         recipientSocket.on('error', (error) => {
+//             console.error(`Error establishing socket connection for recipient ${recipientId}:`, error);
+//         });
+//     }
+// }
 // // Import required modules
 // const Chat = require('../models/chat');
 // const Athlete = require('../models/athlete');
