@@ -1,16 +1,18 @@
-const express = require("express");
+const express = require('express');
+const http = require('http');
+const socketIO = require('socket.io');
+const cors = require('cors');
 const app = express();
-const cors = require("cors");
-const http = require("http"); 
+const server = http.createServer(app); // Create HTTP server first
+const io = socketIO(server); // Initialize Socket.IO with the server
 
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config({ path: "config/config.env" });
 }
+
 // Middleware
 app.use(express.json());
 app.use(cors());
-
-const server = http.createServer(app);
 
 // Import routes
 const Athlete = require("./routes/athlete");
@@ -32,4 +34,4 @@ app.use("/api/v1", walletRoutes);
 app.use("/api/v1", session);
 app.use("/api/v1", auth);
 
-module.exports = { server };
+module.exports = { server, io };

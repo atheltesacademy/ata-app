@@ -1,10 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const chat = require('../controllers/chat');
-const athlete = require('../controllers/athlete');
-const coach = require('../controllers/coach');
 
-router.post('/chats', (req, res) => chat.createChat(req, res, athlete, coach));
+router.post('/chat/create', (req, res) => { chat.createChat(req,res);});
 router.get('/chats/athlete/:athlete_id', chat.getAthleteChats);
 router.get('/chats/coach/:coach_id', chat.getCoachChats);
 router.get('/:id', chat.getChatById);
