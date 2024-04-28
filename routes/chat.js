@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const chat = require('../controllers/chat');
 
-router.post('/chat/create', (req, res) => { chat.createChat(req,res);});
-router.post('/chat/create/Bycoach', (req, res) => { chat.coachSendMessageToAthlete(req,res);});
+router.post('/chat/create', (req, res) => { chat.createAndSendMessage(req,res);});
+// router.post('/chat/create/Bycoach', (req, res) => { chat.coachSendMessageToAthlete(req,res);});
 
 router.get('/chats/athlete/:athlete_id', chat.getAthleteChats);
 router.get('/chats/coach/:coach_id', chat.getCoachChats);
