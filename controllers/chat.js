@@ -1,6 +1,7 @@
 const Chat = require('../models/chat');
-const Athlete = require('../models/athlete'); 
-const Coach = require('../models/coach'); 
+const Athlete = require('../models/athlete');
+const Coach = require('../models/coach');
+const { io } = require('../app');
 
 exports.createChat = async (req, res) => {
     try {
@@ -54,7 +55,6 @@ exports.createChat = async (req, res) => {
         await chat.save();
 
         // Emit the chat data to clients using Socket.IO
-        const io = req.app.get('io');
         if (io) {
             io.emit('new_chat', chat);
         }
@@ -68,104 +68,48 @@ exports.createChat = async (req, res) => {
     }
 };
 
+// Function to handle coach sending a message to athlete
+exports.coachSendMessageToAthlete = async (req, res) => {
+    try {
+        // Extract athlete_id, coach_id, and message from the request body
+        const { athlete_id, coach_id, message } = req.body;
 
-// // Function to send chat messages to recipients
-// function sendChatMessage(senderId, recipientId, data) {
-//     const recipientClient = connectedClients[recipientId];
+        // Find the chat document between the athlete and coach
+        let chat = await Chat.findOne({
+            $or: [
+                { athlete_id, coach_id },
+                { athlete_id: coach_id, coach_id: athlete_id }
+            ]
+        });
 
-//     // If recipient WebSocket connection is available, send the message
-//     if (recipientClient && recipientClient.readyState === WebSocket.OPEN) {
-//         recipientClient.send(JSON.stringify(data));
-//     } else {
-//         // Recipient WebSocket connection not found or not open, open a new WebSocket connection
-//         console.log(`Recipient ${recipientId} WebSocket connection is not open or not found, opening new connection...`);
-        
-//         // Assuming WebSocket server is running on port ..
-//         const newClient = new WebSocket('http://localhost:4000');
+        // If chat doesn't exist, return error
+        if (!chat) {
+            return res.status(404).json({ success: false, message: 'Chat not found' });
+        }
 
-//         // Handle new WebSocket connection events
-//         newClient.on('open', () => {
-//             console.log(`New WebSocket connection established for ${recipientId}`);
-//             connectedClients[recipientId] = newClient;
-//             newClient.send(JSON.stringify(data)); // Send the message
-//         });
+        // Add the coach's message to the messages array
+        chat.messages.push({
+            sender_id: coach_id,
+            text: message,
+            timestamp: new Date() 
+        });
 
-//         newClient.on('error', (error) => {
-//             console.error(`Error establishing WebSocket connection for ${recipientId}:`, error);
-//         });
-//     }
-// }
+        // Save the updated chat document
+        chat = await chat.save();
 
-// // Initialize connectedClients as a Map
-// const connectedClients = new Map();
-// exports.createChat = async (req, res) => {
-//     try {
-//         const { athlete_id, coach_id, message } = req.body;
+        // Emit the message to the respective room
+        if (io) {
+            io.to(chat._id).emit('message_received', chat);
+        }
 
-//         // Fetch athlete and coach records from the database
-//         const athlete = await Athlete.findById(athlete_id);
-//         const coach = await Coach.findById(coach_id);
-
-//         if (!athlete || !coach) {
-//             return res.status(404).json({ success: false, message: 'Athlete or coach not found' });
-//         }
-
-//         // Find or create the chat document based on both athlete and coach IDs
-//         let chat = await Chat.findOne({
-//             $or: [
-//                 { athlete_id: athlete_id, coach_id: coach_id },
-//                 { athlete_id: coach_id, coach_id: athlete_id }
-//             ]
-//         });
-
-//         if (!chat) {
-//             // If no chat exists, create a new one
-//             chat = new Chat({
-//                 athlete_id: athlete_id,
-//                 coach_id: coach_id,
-//                 messages: [] // Initialize messages array
-//             });
-//         }
-
-//         // Determine the sender based on the current participants' IDs
-//         const sender_id = athlete_id === athlete._id.toString() ? athlete_id : coach_id;
-
-//         // Determine the recipient based on the sender
-//         const recipient_id = sender_id === athlete_id ? coach_id : athlete_id;
-
-//         // Add the new message to the messages array
-//         chat.messages.push({
-//             sender_id: sender_id,
-//             text: message
-//         });
-
-//         // Save the chat document
-//         await chat.save();
-//         console.log('Chat saved:', chat);
-
-//         // Send the message to the recipient
-//         sendChatMessage(sender_id, recipient_id, {
-//             type: 'chat',
-//             chat_id: chat._id,
-//             message: message,
-//             timestamp: chat.messages.slice(-1)[0].timestamp // Get the timestamp of the last message
-//         });
-
-//         res.status(201).json({ success: true, chat });
-//     } catch (error) {
-//         console.error('Error creating chat:', error);
-//         res.status(500).json({ success: false, message: 'Internal server error' });
-//     }
-// };
-
-// function sendChatMessage(senderId, recipientId, data) {
-//     if (connectedClients.has(recipientId)) {
-//         const recipientClient = connectedClients.get(recipientId);
-//         if (recipientClient.readyState === WebSocket.OPEN) {
-//             recipientClient.send(JSON.stringify(data));
-//         }
-//     }
-// }
+        // Send success response
+        res.status(200).json({ success: true, message: 'Message sent successfully' });
+    } catch (error) {
+        // Handle errors
+        console.error('Error sending message from coach to athlete:', error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
 
 // Get all history chats for coaches
 exports.getCoachChats = async (req, res) => {
