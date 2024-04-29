@@ -34,4 +34,4 @@ app.use("/api/v1", walletRoutes);
 app.use("/api/v1", session);
 app.use("/api/v1", auth);
 
-module.exports = { server, io };
+module.exports = { server, io, app };
