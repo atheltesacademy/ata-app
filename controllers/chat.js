@@ -79,8 +79,6 @@ exports.createAndSendMessage = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
-
-
 // const Chat = require('../models/chat');
 // const Athlete = require('../models/athlete');
 // const Coach = require('../models/coach');
