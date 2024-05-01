@@ -21,11 +21,10 @@ const auth = async (req, res, next) => {
         // Generate and attach the JWT token to the request object
         req.session = session;
         req.token = generateToken(session);
-
+        
         next();
     } catch (error) {
-        res.status(401).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
 };
-
 module.exports = auth;

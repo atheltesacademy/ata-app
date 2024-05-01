@@ -1,7 +1,7 @@
 {
-  "name": "mern-ata",
+  "name": "ata-app",
   "version": "1.0.0",
-  "description": "",
+  "description": "Ata backend service",
   "main": "server.js",
   "scripts": {
     "dev": "nodemon backend/server.js"

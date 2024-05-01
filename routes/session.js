@@ -9,5 +9,6 @@ router.put('/updatePassword', session.updatePassword);
 // Routes for sessions
 router.post('/signup', session.signup);
 router.post('/logout', session.logout);
+router.put('/signupDetails', session.signupDetails);
 
 module.exports = router;

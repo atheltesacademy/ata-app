@@ -1,9 +1,14 @@
-
 const mongoose = require('mongoose');
 
 const chatSchema = new mongoose.Schema({
-    participant_id: {
+    athlete_id: {
         type: mongoose.Schema.Types.ObjectId,
+        ref: 'Athlete', // Reference to Athlete model
+        required: true
+    },
+    coach_id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Coach', // Reference to Coach model
         required: true
     },
     message: {
@@ -17,11 +22,6 @@ const chatSchema = new mongoose.Schema({
 });
 
 const chatHistorySchema = new mongoose.Schema({
-    chat_id: {
-        type: String,
-        required: true
-    },
-   
     chats: [chatSchema]
 });
 

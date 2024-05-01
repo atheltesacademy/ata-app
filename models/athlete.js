@@ -16,10 +16,7 @@ const athleteSchema = new mongoose.Schema({
   health_height_desc: { type: String },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
-  user_type: {
-    type: String,
-    default: 'athlete',
-  },
+  
 });
 
 athleteSchema.index({ email: 1 }, { unique: true });

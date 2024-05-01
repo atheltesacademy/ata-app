@@ -7,13 +7,16 @@ if(process.env.NODE_ENV !== "production"){
     require("dotenv").config({path: "config/config.env"});
 }
 // Using middlewares
-app.use(cors());
 const options = {
     origin: 'http://localhost:4000',
     }
 app.use(cors(options));
 app.use(express.json());
 app.use(cookieParser());
+app.get('/test-cookie', (req, res) => {
+    console.log(req.cookies);
+    res.send('Cookie parsed successfully!');
+});
 app.use(express.urlencoded({extended:true}));
 
 const Athlete = require("./routes/athlete");

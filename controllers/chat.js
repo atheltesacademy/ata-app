@@ -14,17 +14,18 @@ exports.createChat = async (req, res) => {
 exports.getCoachChats = async (req, res) => {
     try {
         const coach_id = req.params.coach_id;
-        const chat = await Chat.find({ participant_id: coach_id }); // Use ChatHistory instead of chatHistory
+        const chat = await Chat.find({ coach_id }); 
         res.status(200).json({ success: true, chat });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 // Get all history chats for an athlete
 exports.getAthleteChats = async (req, res) => {
     try {
         const athlete_id = req.params.athlete_id;
-        const chat = await Chat.find({ participant_id: athlete_id }); // Use ChatHistory instead of chatHistory
+        const chat = await Chat.find({ athlete_id }); 
         res.status(200).json({ success: true, chat });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
@@ -32,6 +33,7 @@ exports.getAthleteChats = async (req, res) => {
 };
 
 // Get all chats
+//TODO it only be accessible to admin
 exports.getAllChats = async (req, res) => {
     try {
         const chats = await Chat.find();
