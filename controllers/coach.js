@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Coach = require('../models/coach');
 const Review = require('../models/review');
 const Sport = require('../models/sport');
+const Session = require('../models/session');
 
 exports.updateCoachDetails = async (req, res) => {
     try {

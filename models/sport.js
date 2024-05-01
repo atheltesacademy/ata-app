@@ -1,12 +1,14 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const sportSchema = new mongoose.Schema({
-   
+const sportSchema = new mongoose.Schema(
+  {
     sport_name: {
-        type: String,
-        required: true,
-        unique:true,
+      type: String,
+      required: true,
+      unique: true,
     },
-}, { timestamps: true });
+  },
+  { timestamps: true }
+);
 
-module.exports = mongoose.model('Sport', sportSchema);
+module.exports = mongoose.model("Sport", sportSchema);

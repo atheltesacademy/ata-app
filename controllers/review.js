@@ -25,6 +25,7 @@ exports.createReview = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
 // Get all reviews
 exports.getAllReviews = async (req, res) => {
     try {
@@ -42,7 +43,6 @@ exports.getAllReviews = async (req, res) => {
 // Get review by ID
 exports.getReviewById = async (req, res) => {
     try {
-     
         const review = await Review.findOne({ review_id: req.params.id }); // Find review by review ID
         if (!review) {
             return res.status(404).json({ success: false, message: 'Review not found' });

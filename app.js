@@ -1,12 +1,16 @@
 const express = require("express");
 const app = express();
 const cookieParser = require('cookie-parser');
-const cors=require('cors');
+const cors = require('cors');
 
 if(process.env.NODE_ENV !== "production"){
     require("dotenv").config({path: "config/config.env"});
 }
 // Using middlewares
+const options = {
+    origin: 'http://localhost:4000',
+    }
+app.use(cors(options));
 app.use(express.json());
 app.use(cookieParser());
 app.get('/test-cookie', (req, res) => {
@@ -14,10 +18,6 @@ app.get('/test-cookie', (req, res) => {
     res.send('Cookie parsed successfully!');
 });
 app.use(express.urlencoded({extended:true}));
-const options = {
-    origin: 'http://localhost:4000',
-    }
-app.use(cors(options))
 
 const Athlete = require("./routes/athlete");
 const coach = require("./routes/coach");

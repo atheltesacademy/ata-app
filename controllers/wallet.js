@@ -80,7 +80,7 @@ exports.getWalletTransactions = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Athlete not found' });
         }
         // Find the wallet for the athlete
-        let wallet = await Wallet.findOne({ athlete_id });
+        const wallet = await Wallet.findOne({ athlete_id });
 
         if (!wallet) {
             return res.status(404).json({ success: false, message: 'Wallet not found' });
