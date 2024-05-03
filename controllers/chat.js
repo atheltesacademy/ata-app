@@ -14,14 +14,11 @@ exports.createAndSendMessage = async (req, res) => {
 
         // If athlete or coach doesn't exist, create them
         if (!athlete) {
-            athlete = new Athlete({ _id: athlete_id });
-            await athlete.save();
+            return res.status(401).json({ success: false, message: 'Unauthorized request: Athlete not found' });
         }
         if (!coach) {
-            coach = new Coach({ _id: coach_id });
-            await coach.save();
+            return res.status(401).json({ success: false, message: 'Unauthorized request: Coach not found' });
         }
-
         // Find or create the chat document based on both athlete and coach IDs
         let chat = await Chat.findOneAndUpdate(
             {
@@ -36,7 +33,7 @@ exports.createAndSendMessage = async (req, res) => {
 
         // Verify if chat object is properly initialized
         if (!chat || !chat.messages) {
-            throw new Error('Failed to retrieve chat object from database or missing messages array.');
+            return res.status(404).json({ success: false, message: 'Chat object not found or messages array missing.' });
         }
 
         // Determine the sender based on the current participants' IDs and sender role
@@ -50,29 +47,31 @@ exports.createAndSendMessage = async (req, res) => {
         }
 
         // Add the new message to the messages array
-        chat.messages.push({
+        const newMessage = {
             sender_id: senderId,
             text: message,
             timestamp: new Date()
-        });
+        };
+        chat.messages.push(newMessage);
 
         // Save the chat document along with athlete and coach IDs
         chat.athlete_id = athlete_id;
         chat.coach_id = coach_id;
         await chat.save();
 
-        // Emit the chat data to clients using Socket.IO
+        // Emit the latest message to clients using Socket.IO
         if (io) {
-            io.emit('new_chat', chat);
+            io.emit('new_message', { chatId: chat._id, message: newMessage });
         }
 
         // Emit the message to the respective room
         if (io) {
-            io.to(chat._id).emit('message_received', chat);
+            io.to(chat._id).emit('message_received', { chatId: chat._id, message: newMessage });
         }
 
         // Send the response with the created or updated chat instance along with athlete and coach IDs
-        res.status(201).json({ success: true, chat });
+        res.status(200).json({ success: true, chatId: chat._id });
+
     } catch (error) {
         // Handle errors
         console.error('Error creating chat or sending message:', error);

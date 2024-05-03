@@ -3,28 +3,29 @@ const mongoose = require('mongoose');
 
 const chatSchema = new mongoose.Schema({
     athlete_id: {
-        type: String,
-        ref: 'Athlete'
+        type:mongoose.Schema.Types.ObjectId,
+        ref: 'Athlete',
+        required: true 
     },
     coach_id: {
-        type: String,
-        ref: 'Coach'
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Coach',
+        required: true 
     },
     messages: [{
         sender_id: {
-            type: String,
-            ref: 'User' // Assuming there's a User model containing both Athlete and Coach
+            type: mongoose.Schema.Types.ObjectId,
         },
         text: {
             type: String
         },
         timestamp: {
-            type: String,
+            type: Date,
             default: Date.now().toString()
         }
     }],
     timestamp: {
-        type: String,
+        type: Date,
         default: Date.now().toString()
     }
 });
