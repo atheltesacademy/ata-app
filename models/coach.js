@@ -14,7 +14,7 @@ const coachSchema = new mongoose.Schema({
   // TODO: A different collection for languages can be created in future if there are lots of languages.
   // and 'coach_languages' can be a list of ids of languages.
   coach_languages: [{ type: String }], 
-  coach_charges: { type: Number },
+  coach_charges: { type: Number, default: 0 },
   coach_currency: { type: String },
   coach_available: { type: Boolean, default: false},
   created_at: { type: Date, default: Date.now },
