@@ -14,6 +14,7 @@ const athleteSchema = new mongoose.Schema({
   address: { type: String },
   alternative_contact: { type: String },
   health_height_desc: { type: String },
+  image_url: { type: String,required:true }, 
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
   

@@ -1,48 +1,52 @@
-
 const Athlete = require('../models/athlete');
 const Coach = require('../models/coach');
 const Wallet = require('../models/wallet');
 const Session = require('../models/session');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { uploadOnCloudinary } = require( '../utils/cloudinary');
 
 // Function to generate JWT token
 const generateToken = (userId) => {
-    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' }); // Adjust expiry time as needed 
+    return jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
 };
+
 exports.signup = async (req, res) => {
     try {
-        // Ensure email, password, and confirmPassword are valid strings
-        if (typeof req.body.email !== 'string' || typeof req.body.password !== 'string' || typeof req.body.confirmPassword !== 'string') {
-            res.status(400).json({ error: 'Invalid email or password' });
-        }
-        // Check if password and confirmPassword match
-        if (req.body.password !== req.body.confirmPassword) {
-            res.status(401).json({ error: 'Unauthorized' });
+        const { email, password, confirmPassword, userType } = req.body;
 
+        // Ensure email, password, and confirmPassword are valid strings
+        if (typeof email !== 'string' || typeof password !== 'string' || typeof confirmPassword !== 'string') {
+            return res.status(400).json({ error: 'Invalid email or password' });
         }
+
+        // Check if password and confirmPassword match
+        if (password !== confirmPassword) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
         // Check if a session with the same email already exists
-        const existingSession = await Session.findOne({ email: req.body.email });
+        const existingSession = await Session.findOne({ email });
         if (existingSession) {
-            // throw new Error("This email already exists");
-            res.status(400).json({ error: 'This email already exists' });
+            return res.status(400).json({ error: 'This email already exists' });
         }
+
         // Hash password using bcrypt
-        const hashedPassword = await bcrypt.hash(req.body.password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         let newUser;
-        if (req.body.userType === 'athlete') {
+        if (userType === 'athlete') {
             // Create a new entry in the Athlete table with default ObjectId as _id
-            newUser = new Athlete({ email: req.body.email, password: hashedPassword });
+            newUser = new Athlete({ email, password: hashedPassword });
 
             // Create a new wallet entry for the athlete with an initial amount of $100
             const wallet = new Wallet({ athlete_id: newUser._id, amount: 100 });
             await wallet.save();
-        } else if (req.body.userType === 'coach') {
+        } else if (userType === 'coach') {
             // Create a new entry in the Coach table, letting MongoDB generate _id automatically
-            newUser = new Coach({ email: req.body.email, password: hashedPassword });
+            newUser = new Coach({ email, password: hashedPassword });
         } else {
-            throw new Error("Invalid user type");
+            return res.status(400).json({ error: "Invalid user type" });
         }
 
         // Save the new athlete or coach entry
@@ -50,14 +54,100 @@ exports.signup = async (req, res) => {
 
         // Generate JWT token
         const token = generateToken(newUser._id);
-
-        // Create a new session
-        const newSession = await Session.create({ email: req.body.email, user_id: newUser._id, access_token: token, user_type: req.body.userType });
-        // Save the new session to the database
+        
+        // Create and save the new session
+        const newSession = new Session({ email, user_id: newUser._id, access_token: token, user_type: userType });
         await newSession.save();
 
         // Send the response with the token and user ID
-        res.status(201).json({ message: "Registration successful", user_type: req.body.userType, token, user_id: newUser._id });
+        res.status(201).json({ message: "Registration successful", user_type: userType, token, user_id: newUser._id });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.signupDetails = async (req, res) => {
+    try {
+        const { email, user_type } = req.body;
+        let image_url = null;
+
+        // Check if the email exists in the session database
+        const existingSession = await Session.findOne({ email });
+
+        if (!existingSession) {
+            return res.status(400).json({ error: "Email not found in session database" });
+        }
+
+        // Check if the provided user_type matches the one in the session
+        if (existingSession.user_type !== user_type) {
+            return res.status(400).json({ error: "Provided user type does not match the one in session" });
+        }
+
+        // Upload image to Cloudinary if file is present
+        if (req.file) {
+            const uploadResult = await uploadOnCloudinary(req.file.path);
+            if (uploadResult) {
+                image_url = uploadResult.url; // Get the URL of the uploaded image
+            } else {
+                return res.status(500).json({ error: "Image upload failed" });
+            }
+        }
+
+        // Define user details object to be updated
+        let userDetailsToUpdate;
+
+        if (user_type === 'athlete') {
+            const { name, phone, dob, address, alternative_contact, health_height_desc } = req.body;
+
+            userDetailsToUpdate = {
+                name,
+                phone,
+                dob,
+                address,
+                alternative_contact,
+                health_height_desc,
+                image_url // Include image URL in the update if available
+            };
+        } else if (user_type === 'coach') {
+            const { coach_name, coach_phone, coach_dob, coach_address, domains, coach_languages, detail_experience } = req.body;
+
+            userDetailsToUpdate = {
+                coach_name,
+                coach_phone,
+                coach_dob,
+                coach_address,
+                domains,
+                coach_languages,
+                detail_experience,
+                image_url // Include image URL in the update if available
+            };
+        } else {
+            return res.status(400).json({ error: "Invalid user type" });
+        }
+
+        // Find the user based on email and update the details
+        let updatedUser;
+        if (user_type === 'athlete') {
+            updatedUser = await Athlete.findOneAndUpdate(
+                { email },
+                userDetailsToUpdate,
+                { new: true }
+            );
+        } else if (user_type === 'coach') {
+            updatedUser = await Coach.findOneAndUpdate(
+                { email },
+                userDetailsToUpdate,
+                { new: true }
+            );
+        }
+
+        // Check if user exists and send response
+        if (!updatedUser) {
+            return res.status(401).json({ error: "Unauthorized user" });
+        }
+
+        // Send response with updated user details and image URL
+        res.status(200).json({ message: `${user_type} details updated successfully`, user_id: updatedUser._id, user_type, image_url: updatedUser.image_url });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -89,22 +179,24 @@ exports.login = async (req, res) => {
             throw new Error('Invalid password');
         }
 
-        // Check for existing session and update or create accordingly
-        let existingSession = await Session.findOne({ email: user.email });
+        // Generate JWT token
+        const token = generateToken(user._id);
         
-        if (!existingSession) {
-             // Generate JWT token
-        const token = jwt.sign({ user_id: user._id, email }, process.env.JWT_SECRET);
+        // Update existing session or create a new one
+        let existingSession = await Session.findOneAndUpdate(
+            { email: user.email },
+            { access_token: token },
+            { new: true }
+        );
 
-           // Create a new session
-           const newSession = new Session({
-            email: user.email,
-            user_type: session.user_type,
-            access_token: token,
-            user_id: user._id
-        });
-        await newSession.save();
-        existingSession = newSession
+        if (!existingSession) {
+            existingSession = new Session({
+                email: user.email,
+                user_type: session.user_type,
+                access_token: token,
+                user_id: user._id
+            });
+            await existingSession.save();
         }
 
         res.status(200).json({
@@ -116,6 +208,7 @@ exports.login = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 exports.logout = async (req, res) => {
     try {
         const { email, user_type } = req.body;
@@ -173,80 +266,5 @@ exports.updatePassword = async (req, res) => {
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {
         res.status(500).json({ error: error.message });
-    }
-};
-exports.signupDetails = async (req, res) => {
-    try {
-        const { email, user_type } = req.body;
-
-        // Check if the email exists in the session database
-        const existingSession = await Session.findOne({ email });
-
-        if (!existingSession) {
-            return res.status(400).json({ error: "Email not found in session database" });
-        }
-
-        // Check if the provided user_type matches the one in the session
-        if (existingSession.user_type !== user_type) {
-            return res.status(400).json({ error: "Provided user type does not match the one in session" });
-        }
-
-        // Check if the user type is athlete
-        if (user_type === 'athlete') {
-            const { name, phone, dob, address, alternative_contact, health_height_desc } = req.body;
-
-            // Check if the email exists in the Athlete database
-            let existingAthlete = await Athlete.findOne({ email });
-
-            if (existingAthlete) {
-                // Update the existing athlete's details
-                existingAthlete = await Athlete.findOneAndUpdate(
-                    { email },
-                    {
-                        name,
-                        phone,
-                        dob,
-                        address,
-                        alternative_contact,
-                        health_height_desc,
-
-                    },
-                    { new: true }
-                );
-                return res.status(200).json({ message: "Athlete details updated successfully", user_id: existingAthlete._id, user_type });
-            } else {
-                return res.status(401).json({ error: "Unauthorized user" });
-            }
-        } else if (user_type === 'coach') {
-            const { coach_name, coach_phone, coach_dob, coach_address, domains, coach_languages, detail_experience } = req.body;
-
-            // Check if the email exists in the Coach database
-            let existingCoach = await Coach.findOne({ email });
-
-            if (existingCoach) {
-                // Update the existing coach's details
-                existingCoach = await Coach.findOneAndUpdate(
-                    { email },
-                    {
-                        coach_name,
-                        coach_phone,
-                        coach_dob,
-                        coach_address,
-                        domains,
-                        coach_languages,
-                        detail_experience,
-                    },
-                    { new: true }
-                );
-                return res.status(200).json({ message: "Coach details updated successfully", user_id: existingCoach._id, user_type });
-            } else {
-
-                return res.status(401).json({ error: "Unauthorized user" });
-            }
-        } else {
-            return res.status(400).json({ error: "Invalid user type" });
-        }
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
     }
 };

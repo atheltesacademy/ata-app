@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const session = require('../controllers/session');
-// const auth = require('../middlewares/auth'); 
+const upload = require('../middlewares/multer');
 
 router.post('/login', session.login);
 router.put('/updatePassword', session.updatePassword);
@@ -9,6 +9,6 @@ router.put('/updatePassword', session.updatePassword);
 // Routes for sessions
 router.post('/signup', session.signup);
 router.post('/logout', session.logout);
-router.put('/signupDetails', session.signupDetails);
+router.put('/signupDetails', upload.single('image'),session.signupDetails);
 
 module.exports = router;

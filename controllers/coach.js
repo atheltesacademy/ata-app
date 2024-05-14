@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const Coach = require('../models/coach');
 const Review = require('../models/review');
 const Sport = require('../models/sport');
-const Session = require('../models/session');
 
 exports.updateCoachDetails = async (req, res) => {
     try {
@@ -31,7 +30,7 @@ exports.updateCoachDetails = async (req, res) => {
 };
 exports.getCoaches = async (req, res) => {
     try {
-        const coaches = await Coach.find({}, '_id coach_name coach_rating domains coach_languages coach_charges coach_currency coach_available');
+        const coaches = await Coach.find({}, '_id coach_name coach_rating domains coach_languages coach_charges coach_currency coach_available image_url');
         res.status(200).json({ coaches });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -128,7 +127,7 @@ exports.toggleAvailability = async (req, res) => {
 exports.getAvailableCoaches = async (req, res) => {
     try {
     
-        const coaches = await Coach.find({coach_available:true} ,'_id coach_name coach_rating domains coach_languages coach_charges coach_currency coach_available');
+        const coaches = await Coach.find({coach_available:true} ,'_id coach_name coach_rating domains coach_languages coach_charges coach_currency coach_available image_url');
         res.status(200).json({ coaches });
     } catch (error) {
         res.status(500).json({ error: error.message });

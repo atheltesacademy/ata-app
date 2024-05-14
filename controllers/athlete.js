@@ -28,6 +28,7 @@ exports.createAthlete = async (req, res) => {
       address,
       alternative_contact,
       health_height_desc
+   
     });
 
     // Save the athlete to the database
@@ -41,7 +42,7 @@ exports.createAthlete = async (req, res) => {
 };
 exports.detailAthlete = async (req, res) => {
   try {
-    const { athlete_id,email, name, phone, dob, address,alternative_contact,health_height_desc, user_type } = req.body;
+    const { athlete_id,email, name, phone, dob, address,alternative_contact,health_height_desc,user_type } = req.body;
 
     // Check if an athlete with the provided email already exists
     const existingAthlete = await Athlete.findOne({ email });
@@ -86,7 +87,7 @@ exports.getAllAthletes = async (req, res) => {
 
 exports.updateAthleteDetails = async (req, res) => {
   try {
-      const { email, phone, name, dob, address, alternative_contact, health_height_desc } = req.body;
+      const { email, phone, name, dob, address, alternative_contact, health_height_desc, } = req.body;
       let existingAthlete = await Athlete.findOne({ email });
 
       if (existingAthlete) {
@@ -99,7 +100,7 @@ exports.updateAthleteDetails = async (req, res) => {
                   address,
                   alternative_contact,
                   health_height_desc,
-                  updated_at: Date.now() // Update the updated_at field
+                  updated_at: Date.now() 
               },
               { new: true }
           );

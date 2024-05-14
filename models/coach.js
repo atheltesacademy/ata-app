@@ -17,6 +17,7 @@ const coachSchema = new mongoose.Schema({
   coach_charges: { type: Number, default: 0 },
   coach_currency: { type: String },
   coach_available: { type: Boolean, default: false},
+  image_url: { type: String ,},
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
 });
