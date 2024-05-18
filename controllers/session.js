@@ -168,9 +168,7 @@ exports.updatePassword = async (req, res) => {
   try {
     // Check if all required parameters are provided
     if (!email || !old_password || !new_password) {
-      throw new Error(
-        "All fields (email, old_password, new_password) are required"
-      );
+      return res.status(400).json({error: "All fields (email, old_password, new_password) are required"})
     }
 
     let user;
@@ -185,13 +183,13 @@ exports.updatePassword = async (req, res) => {
     } else if (coach) {
       user = coach;
     } else {
-      throw new Error("No account registered with this email");
+      return res.status(404).json({error: "No account registered with this email"})
     }
 
     // Compare old password
     const isPasswordMatch = await bcrypt.compare(old_password, user.password);
     if (!isPasswordMatch) {
-      throw new Error("Old password is incorrect");
+      return res.status(401).json({error: "Old password entered was incorrect!"})
     }
 
     // Hash the new password
