@@ -7,6 +7,7 @@ const sportSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    image_url: { type: String ,},
   },
   { timestamps: true }
 );

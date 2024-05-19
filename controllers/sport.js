@@ -1,17 +1,31 @@
 const mongoose = require('mongoose');
 const Sport = require('../models/sport');
+const { uploadOnCloudinary } = require('../utils/cloudinary');
 
 exports.createSport = async (req, res) => {
     try {
         const { sport_name } = req.body;
+        let image_url = null;
+
         // Check if a sport with the same name already exists (case-insensitive)
         const existingSport = await Sport.findOne({ sport_name: { $regex: new RegExp(`^${sport_name}$`, 'i') } });
 
         if (existingSport) {
             return res.status(400).json({ success: false, message: 'Sport already exists' });
         }
+
+        // Upload image to Cloudinary if file is present
+        if (req.file) {
+            const uploadResult = await uploadOnCloudinary(req.file.path);
+            if (uploadResult) {
+                image_url = uploadResult.url; // Get the URL of the uploaded image
+            } else {
+                return res.status(500).json({ success: false, message: 'Image upload failed' });
+            }
+        }
+
         // Create the new sport with the provided details
-        const sport = await Sport.create({ sport_name });
+        const sport = await Sport.create({ sport_name, image_url });
 
         // Return the newly created sport with success status and sport ID
         res.status(201).json({ success: true, sport });
@@ -19,6 +33,26 @@ exports.createSport = async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+
+// exports.createSport = async (req, res) => {
+//     try {
+//         const { sport_name } = req.body;
+//         // Check if a sport with the same name already exists (case-insensitive)
+//         const existingSport = await Sport.findOne({ sport_name: { $regex: new RegExp(`^${sport_name}$`, 'i') } });
+
+//         if (existingSport) {
+//             return res.status(400).json({ success: false, message: 'Sport already exists' });
+//         }
+//         // Create the new sport with the provided details
+//         const sport = await Sport.create({ sport_name });
+
+//         // Return the newly created sport with success status and sport ID
+//         res.status(201).json({ success: true, sport });
+//     } catch (error) {
+//         res.status(500).json({ success: false, message: error.message });
+//     }
+// };
 exports.getSportsByName = async (req, res) => {
     try {
         const { sportName } = req.params;
