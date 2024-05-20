@@ -138,6 +138,7 @@ exports.login = async (req, res) => {
       access_token: existingSession.access_token,
       user_type: session.user_type,
       email: user.email,
+      name: user.coach_name ?? user.name,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
