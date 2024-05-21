@@ -4,6 +4,7 @@ const Wallet = require("../models/wallet");
 const Session = require("../models/session");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const nodemailer = require('nodemailer');
 
 // Function to generate JWT token
 const generateToken = (userId) => {
@@ -311,3 +312,57 @@ exports.signupDetails = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
+
+exports.forgotPassword = async (req, res) => {
+  const {email } = req.body;
+  try {
+    if (!email) {
+      return res.status(400).json({error: "Email not provided"})
+    }
+    let user;
+
+    // Find the user based on email
+    const athlete = await Athlete.findOne({ email });
+    const coach = await Coach.findOne({ email });
+
+    // Check if the user is an athlete or a coach
+    if (athlete) {
+      user = athlete;
+    } else if (coach) {
+      user = coach;
+    } else {
+      return res.status(404).json({error: "No account registered with this email"})
+    }
+
+    const token = generateToken(user._id);
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'prjjwls@gmail.com',
+        pass: 'Selfless@1411'
+      }
+    });
+
+    const mailOptions = {
+      to: email,
+      from: 'prjjwls@gmail.com',
+      subject: 'Password Reset',
+      text: `You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n
+             Please click on the following link, or paste this into your browser to complete the process:\n\n
+             http://localhost:3000/reset-password/${token}\n\n
+             If you did not request this, please ignore this email and your password will remain unchanged.\n`
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).send('Error sending email');
+      }
+      res.send('A reset link has been sent to your email address');
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}

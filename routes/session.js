@@ -5,6 +5,7 @@ const session = require('../controllers/session');
 
 router.post('/login', session.login);
 router.put('/updatePassword', session.updatePassword);
+router.put('/forgotPassword,', session.forgotPassword);
 
 // Routes for sessions
 router.post('/signup', session.signup);
