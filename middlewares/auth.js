@@ -13,11 +13,14 @@ const auth = async (req, res, next) => {
         if (!session) {
             throw new Error('Email is not registered');
         }
+        console.log("coming here")
+
         // Compare password using bcrypt
         const isPasswordMatch = await bcrypt.compare(password, session.password);
         if (!isPasswordMatch) {
             throw new Error('Invalid password');
         }
+
         // Generate and attach the JWT token to the request object
         req.session = session;
         req.token = generateToken(session);
