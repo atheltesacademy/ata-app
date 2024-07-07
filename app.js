@@ -26,6 +26,7 @@ const reviewRoutes = require("./routes/review");
 const chatRoutes = require("./routes/chat");
 const walletRoutes = require("./routes/wallet");
 const session = require("./routes/session");
+const surveyRoutes = require("./routes/survey");
 // const auth = require("./middlewares/auth");
 
 app.use("/api/v1", Athlete);
@@ -35,6 +36,7 @@ app.use("/api/v1", reviewRoutes);
 app.use("/api/v1", chatRoutes);
 app.use("/api/v1", walletRoutes);
 app.use("/api/v1", session);
+app.use('/api/v1', surveyRoutes);
 // app.use("/api/v1", auth);
 
 module.exports = app;
