@@ -2,17 +2,21 @@ const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const { connectDatabase } = require("./config/database");
 
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config({ path: "config/config.env" });
 }
+
 // Using middlewares
 const options = {
   origin: "http://localhost:3000",
 };
+
 app.use(cors(options));
 app.use(express.json());
 app.use(cookieParser());
+
 app.get("/test-cookie", (req, res) => {
   console.log(req.cookies);
   res.send("Cookie parsed successfully!");
@@ -39,4 +43,8 @@ app.use("/api/v1", session);
 app.use('/api/v1', surveyRoutes);
 // app.use("/api/v1", auth);
 
-module.exports = app;
+connectDatabase();
+
+app.listen(process.env.PORT, () => {
+  console.log(`server is running on port ${process.env.PORT}`);
+});
