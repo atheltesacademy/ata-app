@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Coach = require('../models/coach');
 const Review = require('../models/review');
 const Sport = require('../models/sport');
-const Session = require('../models/session');
+const Athlete = require('../models/athlete');
 
 exports.updateCoachDetails = async (req, res) => {
     try {
@@ -89,7 +89,15 @@ exports.getCoachReview = async (req, res) => {
             return res.status(400).json({ message: "Coach ID is required" });
         }
         const reviews = await Review.find({ coach_id });
-        res.status(200).json({ reviews });
+        // Add the athlete's name to the reviews
+        const reviewsWithAthleteNames = reviews.map(async (review) => ({
+            _id: review._id,
+            coach_id: review.coach_id,
+            athlete_name: (await Athlete.findById(review.athlete_id)).name,
+            rating: review.rating,
+            comment: review.comment
+        }));
+        res.status(200).json({ reviews: reviewsWithAthleteNames });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
